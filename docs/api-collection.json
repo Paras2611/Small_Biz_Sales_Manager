@@ -1,0 +1,153 @@
+{
+  "info": {
+    "name": "Small Business Sales Manager API",
+    "description": "Postman / Insomnia API Collection for Thinqloud Campus Assessment CRM",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login - Sales Executive",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"arjun.shah@thinqloud.demo\",\n  \"password\": \"Exec@2026\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Login - Sales Manager",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"priya.mehta@thinqloud.demo\",\n  \"password\": \"Manager@2026\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "KPI Metrics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/dashboard/metrics", "host": ["{{baseUrl}}"], "path": ["api", "v1", "dashboard", "metrics"] }
+          }
+        },
+        {
+          "name": "Funnel Data",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/dashboard/funnel", "host": ["{{baseUrl}}"], "path": ["api", "v1", "dashboard", "funnel"] }
+          }
+        },
+        {
+          "name": "Overdue Follow-ups",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/dashboard/overdue-followups", "host": ["{{baseUrl}}"], "path": ["api", "v1", "dashboard", "overdue-followups"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leads",
+      "item": [
+        {
+          "name": "List Leads",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/leads", "host": ["{{baseUrl}}"], "path": ["api", "v1", "leads"] }
+          }
+        },
+        {
+          "name": "Qualify Lead",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"budget_confirmed\": true,\n  \"decision_maker_identified\": true,\n  \"timeline_months\": 3,\n  \"notes\": \"Evaluated commercial requirements.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/leads/{{leadId}}/qualify", "host": ["{{baseUrl}}"], "path": ["api", "v1", "leads", "{{leadId}}", "qualify"] }
+          }
+        },
+        {
+          "name": "Convert to Opportunity",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"ABC CRM Implementation\",\n  \"amount\": 500000,\n  \"close_date\": \"2026-10-15\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/leads/{{leadId}}/convert-opportunity", "host": ["{{baseUrl}}"], "path": ["api", "v1", "leads", "{{leadId}}", "convert-opportunity"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quotations",
+      "item": [
+        {
+          "name": "Create Quotation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"opportunity_id\": \"{{oppId}}\",\n  \"discount_pct\": 10,\n  \"lines\": [\n    { \"product_id\": \"{{prodId}}\", \"qty\": 2, \"unit_price\": 25000 }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/quotations", "host": ["{{baseUrl}}"], "path": ["api", "v1", "quotations"] }
+          }
+        },
+        {
+          "name": "Approve Quotation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Approved under special campus demo terms.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/quotations/{{quoteId}}/approve", "host": ["{{baseUrl}}"], "path": ["api", "v1", "quotations", "{{quoteId}}", "approve"] }
+          }
+        }
+      ]
+    }
+  ]
+}
