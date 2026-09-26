@@ -36,34 +36,41 @@ public class DataSourceConfig {
         String dbPass = password;
         String driver = driverClassName;
 
-        // Check if DATABASE_URL was provided from Render in standard postgres URI format
-        if (jdbcUrl != null && (jdbcUrl.startsWith("postgres://") || jdbcUrl.startsWith("postgresql://"))) {
-            try {
-                URI uri = new URI(jdbcUrl);
-                String host = uri.getHost();
-                int port = uri.getPort() != -1 ? uri.getPort() : 5432;
-                String path = uri.getPath();
-                String query = uri.getQuery();
+        if (jdbcUrl != null && !jdbcUrl.isBlank()) {
+            String parseableUriStr = jdbcUrl.trim();
+            if (parseableUriStr.startsWith("jdbc:")) {
+                parseableUriStr = parseableUriStr.substring(5);
+            }
 
-                jdbcUrl = "jdbc:postgresql://" + host + ":" + port + path + (query != null ? "?" + query : "");
+            if (parseableUriStr.startsWith("postgres://") || parseableUriStr.startsWith("postgresql://")) {
+                try {
+                    URI uri = new URI(parseableUriStr);
+                    String host = uri.getHost();
+                    if (host != null) {
+                        int port = uri.getPort() != -1 ? uri.getPort() : 5432;
+                        String path = uri.getPath();
+                        String query = uri.getQuery();
 
-                if (uri.getUserInfo() != null) {
-                    String[] userParts = uri.getUserInfo().split(":");
-                    if (dbUser == null || dbUser.isBlank() || "sa".equals(dbUser)) {
-                        dbUser = userParts[0];
+                        jdbcUrl = "jdbc:postgresql://" + host + ":" + port + (path != null ? path : "") + (query != null ? "?" + query : "");
+
+                        if (uri.getUserInfo() != null) {
+                            String[] userParts = uri.getUserInfo().split(":", 2);
+                            if (dbUser == null || dbUser.isBlank() || "sa".equals(dbUser)) {
+                                dbUser = userParts[0];
+                            }
+                            if (userParts.length > 1 && (dbPass == null || dbPass.isBlank())) {
+                                dbPass = userParts[1];
+                            }
+                        }
+                        driver = "org.postgresql.Driver";
+                        log.info("Successfully configured PostgreSQL DataSource for host: {}:{}", host, port);
                     }
-                    if (userParts.length > 1 && (dbPass == null || dbPass.isBlank())) {
-                        dbPass = userParts[1];
-                    }
+                } catch (Exception e) {
+                    log.warn("Failed to parse PostgreSQL URI, using fallback: {}", e.getMessage());
                 }
-                driver = "org.postgresql.Driver";
-                log.info("Successfully converted PostgreSQL URL to JDBC: {}", jdbcUrl);
-            } catch (Exception e) {
-                log.warn("Failed to parse PostgreSQL URI, using as-is: {}", e.getMessage());
             }
         }
 
-        // If URL is postgresql JDBC
         if (jdbcUrl != null && jdbcUrl.startsWith("jdbc:postgresql:")) {
             driver = "org.postgresql.Driver";
         }
@@ -84,3 +91,4 @@ public class DataSourceConfig {
                 .build();
     }
 }
+
