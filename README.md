@@ -117,20 +117,7 @@ python -m pytest tests/
 
 ---
 
-## 6. Eight-Minute Golden Demo Narrative Script
-
-1. **[0:00–0:45] Problem Context**: Explain the challenge small businesses face with fragmented spreadsheets and missed follow-ups. Introduce the unified Lead-to-Conversion CRM.
-2. **[0:45–1:30] Dashboard Overview**: Walk through the 6 KPI cards, the volume funnel chart, and point out the Overdue Follow-ups panel with its direct action links.
-3. **[1:30–2:30] Lead Capture & Qualification**: Click **Create Lead** to reveal the right-side slide-over drawer. Add "ABC Manufacturing", open the detail screen, and complete the qualification assessment checklist.
-4. **[2:30–3:30] Follow-up Activity**: Schedule and complete a pricing discussion follow-up. Show how the activity timeline updates instantly.
-5. **[3:30–4:30] Opportunity & Kanban**: Convert the qualified lead to an Opportunity. Switch to the Kanban board and drag the deal from *Prospecting* to *Proposal*.
-6. **[4:30–6:00] Commercial Quotation & Math Engine**: Open **Quotations**, select the deal, add 3 products with GST tax calculation and a 10% discount. Submit for approval, switch to **Priya Mehta (Manager)**, and approve with comments.
-7. **[6:00–7:00] Won Conversion**: Navigate back to Opportunities, click **Convert Won**, link the approved quote, and watch the dashboard metrics and converted revenue update in real-time.
-8. **[7:00–8:00] AI Assistance & Architecture**: Open an open lead, demonstrate the AI Prioritisation and Next-Best-Action recommendations, and summarize the tech stack and design tokens.
-
----
-
-## 7. AI-Assisted Development Record
+## 6. AI-Assisted Development Record
 
 All prompts, model interactions, human review checkpoints, and architectural learnings are documented in:
 👉 [`docs/ai-dev-log.md`](docs/ai-dev-log.md)
