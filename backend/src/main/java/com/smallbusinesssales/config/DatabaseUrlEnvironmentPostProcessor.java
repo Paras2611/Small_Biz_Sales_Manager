@@ -31,11 +31,17 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
                         String path = uri.getPath(); // includes leading /
                         String query = uri.getQuery();
 
+                        // External Render postgres hosts (.render.com) require SSL mode
+                        if (host.contains(".render.com") && (query == null || !query.contains("sslmode="))) {
+                            query = (query != null && !query.isBlank()) ? query + "&sslmode=require" : "sslmode=require";
+                        }
+
                         String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + (path != null ? path : "") + (query != null ? "?" + query : "");
 
                         Map<String, Object> map = new HashMap<>();
                         map.put("spring.datasource.url", jdbcUrl);
                         map.put("spring.datasource.driver-class-name", "org.postgresql.Driver");
+                        map.put("spring.jpa.database-platform", "org.hibernate.dialect.PostgreSQLDialect");
 
                         if (uri.getUserInfo() != null) {
                             String[] userParts = uri.getUserInfo().split(":", 2);
@@ -52,6 +58,7 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
                                           .replace("postgresql://", "jdbc:postgresql://");
                     Map<String, Object> map = new HashMap<>();
                     map.put("spring.datasource.url", jdbcUrl);
+                    map.put("spring.jpa.database-platform", "org.hibernate.dialect.PostgreSQLDialect");
                     environment.getPropertySources().addFirst(new MapPropertySource("renderDatabaseProperties", map));
                 }
             }
@@ -63,5 +70,6 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         return Ordered.LOWEST_PRECEDENCE;
     }
 }
+
 
 

@@ -51,6 +51,11 @@ public class DataSourceConfig {
                         String path = uri.getPath();
                         String query = uri.getQuery();
 
+                        // External Render postgres hosts (.render.com) require SSL mode
+                        if (host.contains(".render.com") && (query == null || !query.contains("sslmode="))) {
+                            query = (query != null && !query.isBlank()) ? query + "&sslmode=require" : "sslmode=require";
+                        }
+
                         jdbcUrl = "jdbc:postgresql://" + host + ":" + port + (path != null ? path : "") + (query != null ? "?" + query : "");
 
                         if (uri.getUserInfo() != null) {
