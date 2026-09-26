@@ -4,10 +4,18 @@ frontend/dist/
 frontend/.env
 *.local
 
-# Python / Backend
+# Java / Maven
+target/
+backend/target/
+backend/data/
+*.class
+*.jar
+*.war
+*.ear
+
+# Python (Legacy)
 __pycache__/
 *.py[cod]
-*$py.class
 backend/.venv/
 backend/*.db
 backend/.env
