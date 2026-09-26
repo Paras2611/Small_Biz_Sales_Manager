@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -57,19 +58,17 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (userRepository.count() > 0) {
-            log.info("Database already seeded with {} users. Skipping initial seed.", userRepository.count());
+        // Always guarantee updated demo accounts exist with active credentials
+        User exec = ensureDemoUser("Arjun Shah", "arjun.shah@salescrm.demo", "Exec@2026", "sales_executive", "arjun.shah@thinqloud.demo");
+        User manager = ensureDemoUser("Priya Mehta", "priya.mehta@salescrm.demo", "Manager@2026", "sales_manager", "priya.mehta@thinqloud.demo");
+        User admin = ensureDemoUser("Admin User", "admin@salescrm.demo", "Admin@2026", "administrator", "admin@thinqloud.demo");
+
+        if (customerRepository.count() > 0) {
+            log.info("Database customers already exist. Skipping complete dataset re-seed.");
             return;
         }
 
         log.info("Seeding initial CRM demo data...");
-
-        // 1. Users
-        User exec = new User("Arjun Shah", "arjun.shah@salescrm.demo", passwordEncoder.encode("Exec@2026"), "sales_executive");
-        User manager = new User("Priya Mehta", "priya.mehta@salescrm.demo", passwordEncoder.encode("Manager@2026"), "sales_manager");
-        User admin = new User("Admin User", "admin@salescrm.demo", passwordEncoder.encode("Admin@2026"), "administrator");
-
-        userRepository.saveAll(List.of(exec, manager, admin));
 
         // 2. Customers
         Customer c1 = new Customer("Rajesh Kumar", "ABC Manufacturing", "contact@abcmfg.demo", "9876543210", "Plot 42, Industrial Area, Pune");
@@ -202,5 +201,37 @@ public class DataInitializer implements CommandLineRunner {
         quotationRepository.save(q1);
 
         log.info("Demo data seeding completed successfully.");
+    }
+
+    private User ensureDemoUser(String name, String email, String password, String role, String oldEmail) {
+        // If user already exists by updated email, ensure password and role are active
+        Optional<User> existing = userRepository.findByEmail(email);
+        if (existing.isPresent()) {
+            User u = existing.get();
+            u.setPasswordHash(passwordEncoder.encode(password));
+            u.setActive(true);
+            return userRepository.save(u);
+        }
+
+        // If user exists with old email, migrate them to updated email
+        if (oldEmail != null) {
+            Optional<User> oldUser = userRepository.findByEmail(oldEmail);
+            if (oldUser.isPresent()) {
+                User u = oldUser.get();
+                u.setEmail(email);
+                u.setName(name);
+                u.setPasswordHash(passwordEncoder.encode(password));
+                u.setActive(true);
+                log.info("Migrated existing demo account {} -> {}", oldEmail, email);
+                return userRepository.save(u);
+            }
+        }
+
+        // Otherwise create brand new user
+        User newUser = new User(name, email, passwordEncoder.encode(password), role);
+        newUser.setActive(true);
+        User saved = userRepository.save(newUser);
+        log.info("Created demo account: {}", email);
+        return saved;
     }
 }
