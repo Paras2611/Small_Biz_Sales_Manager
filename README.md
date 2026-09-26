@@ -215,7 +215,7 @@ The frontend opens at `http://localhost:5173`.
    - **Environment**: `Java`
    - **Root Directory**: `backend`
    - **Build Command**: `./mvnw clean package -DskipTests`
-   - **Start Command**: `java -jar target/small-business-sales-2.0.0.jar`
+   - **Start Command**: `java -jar target/small-business-sales-1.0.0.jar`
    - **Health Check Path**: `/api/health`
 4. Add Environment Variables:
    - `DATABASE_URL`: Connection string from your Render PostgreSQL instance
