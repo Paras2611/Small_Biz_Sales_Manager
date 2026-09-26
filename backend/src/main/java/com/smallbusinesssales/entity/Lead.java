@@ -7,7 +7,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "leads")
+@EntityListeners(SyncEventListener.class)
 public class Lead {
+
+    @Version
+    private Long version;
+
 
     @Id
     @Column(length = 36)

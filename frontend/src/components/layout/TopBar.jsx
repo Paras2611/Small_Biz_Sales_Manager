@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, UserCircle } from 'lucide-react';
+import { LogOut, UserCircle, Menu } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { useUIStore } from '../../store/useUIStore';
 import { Badge } from '../ui/Badge';
 
 export function TopBar() {
   const { user, logout } = useAuthStore();
+  const { toggleSidebar } = useUIStore();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -20,9 +22,15 @@ export function TopBar() {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-[#D1D9E6] px-8 flex items-center justify-between sticky top-0 z-30">
+    <header className="h-16 bg-white border-b border-[#D1D9E6] px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
       <div className="flex items-center gap-3">
-        <span className="text-xs font-mono text-[#6B7C93]">Sales Manager CRM v1.0</span>
+        <button
+          onClick={toggleSidebar}
+          className="p-2 -ml-2 text-[#6B7C93] hover:text-[#1F2937] hover:bg-gray-100 rounded-[6px] md:hidden"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <span className="text-xs font-mono text-[#6B7C93] hidden sm:block">Sales Manager CRM v1.0</span>
       </div>
 
       <div className="flex items-center gap-4">

@@ -9,7 +9,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "quotations")
+@EntityListeners(SyncEventListener.class)
 public class Quotation {
+
+    @Version
+    private Long version;
 
     @Id
     @Column(length = 36)

@@ -10,8 +10,10 @@ import {
   BarChart3,
   Settings,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { useUIStore } from '../../store/useUIStore';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,21 +28,41 @@ const navItems = [
 
 export function Sidebar() {
   const user = useAuthStore((state) => state.user);
+  const { sidebarOpen, closeSidebar } = useUIStore();
 
   return (
-    <aside className="w-[240px] bg-[#1A2E4A] flex-shrink-0 flex flex-col min-h-screen text-white border-r border-[#152438]">
-      {/* Brand Header */}
-      <div className="h-16 flex items-center px-6 border-b border-[#233B5D]">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-[6px] bg-[#2B5FAD] flex items-center justify-center text-white font-bold">
-            SM
+    <>
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={closeSidebar}
+        />
+      )}
+
+      <aside
+        className={`fixed md:static inset-y-0 left-0 z-50 w-[240px] bg-[#1A2E4A] flex-shrink-0 flex flex-col min-h-screen text-white border-r border-[#152438] transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        {/* Brand Header */}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-[#233B5D]">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-[6px] bg-[#2B5FAD] flex items-center justify-center text-white font-bold">
+              SM
+            </div>
+            <div>
+              <h1 className="text-sm font-semibold tracking-wide">Sales Manager</h1>
+              <p className="text-[10px] text-[#A0AEC0]">B2B Sales CRM</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-sm font-semibold tracking-wide">Sales Manager</h1>
-            <p className="text-[10px] text-[#A0AEC0]">B2B Sales CRM</p>
-          </div>
+          <button
+            onClick={closeSidebar}
+            className="md:hidden text-[#A0AEC0] hover:text-white"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-1">
@@ -53,6 +75,12 @@ export function Sidebar() {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={() => {
+                // Close sidebar on navigation on mobile
+                if (window.innerWidth < 768) {
+                  closeSidebar();
+                }
+              }}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-[6px] text-sm font-medium transition-colors ${
                   isActive
@@ -79,5 +107,6 @@ export function Sidebar() {
         </p>
       </div>
     </aside>
+    </>
   );
 }

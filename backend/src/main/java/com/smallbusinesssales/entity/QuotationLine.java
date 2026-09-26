@@ -9,6 +9,9 @@ import java.util.UUID;
 @Table(name = "quotation_lines")
 public class QuotationLine {
 
+    @Version
+    private Long version;
+
     @Id
     @Column(length = 36)
     private String id;

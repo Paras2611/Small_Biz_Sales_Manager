@@ -87,7 +87,7 @@ In the **Environment** tab of `small-business-sales-backend` (reference `backend
 | Key | Value / Source | Description |
 | :--- | :--- | :--- |
 | `JAVA_VERSION` | `21` | Sets Java 21 runtime |
-| `DATABASE_URL` | *Paste Render PostgreSQL connection string* | Auto-converted to JDBC by Spring Boot |
+| `DATABASE_URL` | `jdbc:postgresql://<host>:5432/sales_manager_z636` | Use the **Internal Database URL** from Render's PostgreSQL dashboard (prefixed with `jdbc:`) to perform atomic CRUD operations. |
 | `JWT_SECRET` | *(Generate a 32+ character random string)* | Used for HMAC-SHA256 JWT tokens |
 | `FRONTEND_URL` | `https://your-frontend.vercel.app` | Allowed CORS origin |
 | `AI_API_KEY` | *(Your Gemini API key or leave blank)* | Optional LLM integration |

@@ -8,7 +8,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "opportunities")
+@EntityListeners(SyncEventListener.class)
 public class Opportunity {
+
+    @Version
+    private Long version;
 
     @Id
     @Column(length = 36)

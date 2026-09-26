@@ -6,7 +6,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "followups")
+@EntityListeners(SyncEventListener.class)
 public class FollowUp {
+
+    @Version
+    private Long version;
 
     @Id
     @Column(length = 36)
