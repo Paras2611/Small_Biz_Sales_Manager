@@ -33,11 +33,11 @@ export function Sidebar() {
       <div className="h-16 flex items-center px-6 border-b border-[#233B5D]">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-[6px] bg-[#2B5FAD] flex items-center justify-center text-white font-bold">
-            TQ
+            SM
           </div>
           <div>
             <h1 className="text-sm font-semibold tracking-wide">Sales Manager</h1>
-            <p className="text-[10px] text-[#A0AEC0]">Thinqloud Campus</p>
+            <p className="text-[10px] text-[#A0AEC0]">B2B Sales CRM</p>
           </div>
         </div>
       </div>

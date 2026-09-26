@@ -7,13 +7,13 @@ import { useAuthStore } from '../store/authStore';
 import api from '../api/client';
 
 const DEMO_ACCOUNTS = [
-  { role: 'Sales Executive', name: 'Arjun Shah', email: 'arjun.shah@thinqloud.demo', pass: 'Exec@2026' },
-  { role: 'Sales Manager', name: 'Priya Mehta', email: 'priya.mehta@thinqloud.demo', pass: 'Manager@2026' },
-  { role: 'Administrator', name: 'Admin User', email: 'admin@thinqloud.demo', pass: 'Admin@2026' },
+  { role: 'Sales Executive', name: 'Arjun Shah', email: 'arjun.shah@salescrm.demo', pass: 'Exec@2026' },
+  { role: 'Sales Manager', name: 'Priya Mehta', email: 'priya.mehta@salescrm.demo', pass: 'Manager@2026' },
+  { role: 'Administrator', name: 'Admin User', email: 'admin@salescrm.demo', pass: 'Admin@2026' },
 ];
 
 export function Login() {
-  const [email, setEmail] = useState('arjun.shah@thinqloud.demo');
+  const [email, setEmail] = useState('arjun.shah@salescrm.demo');
   const [password, setPassword] = useState('Exec@2026');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,10 +45,10 @@ export function Login() {
       <Card className="w-full max-w-md bg-white p-8">
         <div className="text-center mb-6">
           <div className="w-12 h-12 bg-[#2B5FAD] text-white rounded-[8px] flex items-center justify-center mx-auto text-xl font-bold mb-3">
-            TQ
+            SM
           </div>
           <h2 className="text-xl font-bold text-[#1A2E4A]">Small Business Sales Manager</h2>
-          <p className="text-xs text-[#6B7C93] mt-1">Thinqloud Campus Assessment · Topic #2</p>
+          <p className="text-xs text-[#6B7C93] mt-1">B2B Sales Pipeline & CRM Management</p>
         </div>
 
         {error && (

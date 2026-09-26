@@ -22,7 +22,7 @@ export function TopBar() {
   return (
     <header className="h-16 bg-white border-b border-[#D1D9E6] px-8 flex items-center justify-between sticky top-0 z-30">
       <div className="flex items-center gap-3">
-        <span className="text-xs font-mono text-[#6B7C93]">Thinqloud CRM v1.0</span>
+        <span className="text-xs font-mono text-[#6B7C93]">Sales Manager CRM v1.0</span>
       </div>
 
       <div className="flex items-center gap-4">

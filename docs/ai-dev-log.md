@@ -10,7 +10,7 @@
 ## 1. Development Phases & Prompt Records
 
 ### Phase 1: Requirements & Domain Mapping
-- **Input / Prompt**: "Analyze the complete PRD v2.0 for Small Business Sales Manager, extracting core CRM actors, lifecycle stages, business rules, and Thinqloud's Salesforce consulting context."
+- **Input / Prompt**: "Analyze the complete PRD for Small Business Sales Manager, extracting core CRM actors, lifecycle stages, and B2B commercial business rules."
 - **AI Recommendation**: Generated full traceability mapping from Lead capture through Quotation approval to Closed Won conversion.
 - **Manual Adjustments & Learnings**:
   - Enforced strict business rule: Prevent marking an opportunity as Won without an approved quotation.
@@ -32,7 +32,7 @@
 ### Phase 4: Frontend & Design System
 - **Input / Prompt**: "Build a bespoke design system with CSS custom properties on `:root` per PRD Section 5.2 (no generic UI library templates). Implement Inter + JetBrains Mono typography, skeleton shimmers, and slide-over lead drawer."
 - **Manual Adjustments**:
-  - Implemented 240px fixed sidebar with Thinqloud navy palette (`#1A2E4A`).
+  - Implemented 240px fixed sidebar with deep navy palette (`#1A2E4A`).
   - Added 65% / 35% two-column split on Lead Detail with dedicated AI Assistant panel.
   - Built interactive 3-column Follow-ups board (Overdue, Due Today, Upcoming) with inline resolution.
 

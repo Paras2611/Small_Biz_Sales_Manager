@@ -17,7 +17,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret:default-secret-key-must-be-at-least-256-bits-long-for-hmac-sha256-thinqloud-crm}")
+    @Value("${jwt.secret:default-secret-key-must-be-at-least-256-bits-long-for-hmac-sha256-b2b-sales-crm}")
     private String secretKey;
 
     @Value("${jwt.expiration:86400000}") // 24 hours in ms

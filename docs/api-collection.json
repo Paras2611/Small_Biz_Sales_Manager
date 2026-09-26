@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Small Business Sales Manager API",
-    "description": "Postman / Insomnia API Collection for Thinqloud Campus Assessment CRM",
+    "description": "Postman / Insomnia API Collection for Small Business Sales Manager CRM",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -15,7 +15,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"arjun.shah@thinqloud.demo\",\n  \"password\": \"Exec@2026\"\n}"
+              "raw": "{\n  \"email\": \"arjun.shah@salescrm.demo\",\n  \"password\": \"Exec@2026\"\n}"
             },
             "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] }
           }
@@ -27,7 +27,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"priya.mehta@thinqloud.demo\",\n  \"password\": \"Manager@2026\"\n}"
+              "raw": "{\n  \"email\": \"priya.mehta@salescrm.demo\",\n  \"password\": \"Manager@2026\"\n}"
             },
             "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] }
           }

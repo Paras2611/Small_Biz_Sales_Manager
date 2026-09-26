@@ -65,9 +65,9 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Seeding initial CRM demo data...");
 
         // 1. Users
-        User exec = new User("Arjun Shah", "arjun.shah@thinqloud.demo", passwordEncoder.encode("Exec@2026"), "sales_executive");
-        User manager = new User("Priya Mehta", "priya.mehta@thinqloud.demo", passwordEncoder.encode("Manager@2026"), "sales_manager");
-        User admin = new User("Admin User", "admin@thinqloud.demo", passwordEncoder.encode("Admin@2026"), "administrator");
+        User exec = new User("Arjun Shah", "arjun.shah@salescrm.demo", passwordEncoder.encode("Exec@2026"), "sales_executive");
+        User manager = new User("Priya Mehta", "priya.mehta@salescrm.demo", passwordEncoder.encode("Manager@2026"), "sales_manager");
+        User admin = new User("Admin User", "admin@salescrm.demo", passwordEncoder.encode("Admin@2026"), "administrator");
 
         userRepository.saveAll(List.of(exec, manager, admin));
 

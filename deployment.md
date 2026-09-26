@@ -103,9 +103,9 @@ In the **Environment** tab of `small-business-sales-backend` (reference `backend
 
 On first startup in production, the Spring Boot application's `DataInitializer` component automatically detects an unseeded database and creates:
 - 3 Demo Users:
-  - **Arjun Shah** (`arjun.shah@thinqloud.demo` / `Exec@2026`, Sales Executive)
-  - **Priya Mehta** (`priya.mehta@thinqloud.demo` / `Manager@2026`, Sales Manager)
-  - **Admin User** (`admin@thinqloud.demo` / `Admin@2026`, Administrator)
+  - **Arjun Shah** (`arjun.shah@salescrm.demo` / `Exec@2026`, Sales Executive)
+  - **Priya Mehta** (`priya.mehta@salescrm.demo` / `Manager@2026`, Sales Manager)
+  - **Admin User** (`admin@salescrm.demo` / `Admin@2026`, Administrator)
 - 4 Customers (ABC Manufacturing, Sunrise Retail, GreenLeaf Foods, TechBridge Solutions)
 - 4 Products with GST tax rules
 - Initial Leads, Opportunities, Follow-ups, and Quotations

@@ -3,7 +3,7 @@
 [![Backend CI](https://github.com/Paras2611/Small_Biz_Sales_Manager/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/Paras2611/Small_Biz_Sales_Manager/actions/workflows/ci-backend.yml)
 [![Frontend CI](https://github.com/Paras2611/Small_Biz_Sales_Manager/actions/workflows/ci-frontend.yml/badge.svg)](https://github.com/Paras2611/Small_Biz_Sales_Manager/actions/workflows/ci-frontend.yml)
 
-A high-integrity, enterprise-grade B2B Sales Management CRM application purpose-built for the **Thinqloud Campus Application Development Assessment (Topic #2)**.
+A high-integrity, enterprise-grade B2B Sales Management CRM application built for small and mid-sized enterprises.
 
 The platform orchestrates the complete commercial lifecycle: **Lead Capture → BANT Qualification → Activity & Follow-up Management → Deal Opportunity Tracking → Multi-line Quotations & Tiered Approvals → Won Conversion & Revenue Analytics**.
 
@@ -89,9 +89,9 @@ The backend automatically seeds demo records and credentials on first boot if th
 
 | Role | Name | Email | Password | Responsibilities |
 | :--- | :--- | :--- | :--- | :--- |
-| **Sales Executive** | Arjun Shah | `arjun.shah@thinqloud.demo` | `Exec@2026` | Capture leads, log activities, create quotes |
-| **Sales Manager** | Priya Mehta | `priya.mehta@thinqloud.demo` | `Manager@2026` | Pipeline review, review & approve/reject quotes |
-| **Administrator** | Admin User | `admin@thinqloud.demo` | `Admin@2026` | User provisioning, product catalog, global settings |
+| **Sales Executive** | Arjun Shah | `arjun.shah@salescrm.demo` | `Exec@2026` | Capture leads, log activities, create quotes |
+| **Sales Manager** | Priya Mehta | `priya.mehta@salescrm.demo` | `Manager@2026` | Pipeline review, review & approve/reject quotes |
+| **Administrator** | Admin User | `admin@salescrm.demo` | `Admin@2026` | User provisioning, product catalog, global settings |
 
 ---
 

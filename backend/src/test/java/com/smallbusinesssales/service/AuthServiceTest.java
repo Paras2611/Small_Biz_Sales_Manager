@@ -38,7 +38,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         jwtService = new JwtService();
-        ReflectionTestUtils.setField(jwtService, "secretKey", "test-secret-key-must-be-at-least-256-bits-long-for-hmac-sha256-thinqloud");
+        ReflectionTestUtils.setField(jwtService, "secretKey", "test-secret-key-must-be-at-least-256-bits-long-for-hmac-sha256-sales-crm");
         ReflectionTestUtils.setField(jwtService, "jwtExpiration", 3600000L);
 
         AuditLogService auditLogService = new AuditLogService(auditLogRepository, userRepository);
@@ -47,39 +47,39 @@ class AuthServiceTest {
 
     @Test
     void testSuccessfulLogin() {
-        User user = new User("Arjun Shah", "arjun.shah@thinqloud.demo", "hashedPassword", "sales_executive");
-        when(userRepository.findByEmail("arjun.shah@thinqloud.demo")).thenReturn(Optional.of(user));
+        User user = new User("Arjun Shah", "arjun.shah@salescrm.demo", "hashedPassword", "sales_executive");
+        when(userRepository.findByEmail("arjun.shah@salescrm.demo")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("Exec@2026", "hashedPassword")).thenReturn(true);
 
-        TokenResponse response = authService.login(new LoginRequest("arjun.shah@thinqloud.demo", "Exec@2026"));
+        TokenResponse response = authService.login(new LoginRequest("arjun.shah@salescrm.demo", "Exec@2026"));
 
         assertNotNull(response);
         assertNotNull(response.access_token());
         assertEquals("bearer", response.token_type());
-        assertEquals("arjun.shah@thinqloud.demo", response.user().email());
+        assertEquals("arjun.shah@salescrm.demo", response.user().email());
         assertEquals("sales_executive", response.user().role());
     }
 
     @Test
     void testLoginInvalidPasswordThrowsException() {
-        User user = new User("Arjun Shah", "arjun.shah@thinqloud.demo", "hashedPassword", "sales_executive");
-        when(userRepository.findByEmail("arjun.shah@thinqloud.demo")).thenReturn(Optional.of(user));
+        User user = new User("Arjun Shah", "arjun.shah@salescrm.demo", "hashedPassword", "sales_executive");
+        when(userRepository.findByEmail("arjun.shah@salescrm.demo")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("WrongPass", "hashedPassword")).thenReturn(false);
 
         assertThrows(BadRequestException.class, () ->
-                authService.login(new LoginRequest("arjun.shah@thinqloud.demo", "WrongPass"))
+                authService.login(new LoginRequest("arjun.shah@salescrm.demo", "WrongPass"))
         );
     }
 
     @Test
     void testLoginInactiveUserThrowsException() {
-        User user = new User("Arjun Shah", "arjun.shah@thinqloud.demo", "hashedPassword", "sales_executive");
+        User user = new User("Arjun Shah", "arjun.shah@salescrm.demo", "hashedPassword", "sales_executive");
         user.setActive(false);
-        when(userRepository.findByEmail("arjun.shah@thinqloud.demo")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("arjun.shah@salescrm.demo")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("Exec@2026", "hashedPassword")).thenReturn(true);
 
         assertThrows(BadRequestException.class, () ->
-                authService.login(new LoginRequest("arjun.shah@thinqloud.demo", "Exec@2026"))
+                authService.login(new LoginRequest("arjun.shah@salescrm.demo", "Exec@2026"))
         );
     }
 }
