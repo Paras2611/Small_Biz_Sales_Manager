@@ -1,7 +1,7 @@
 # Small Business Sales Manager (CRM)
 
-[![Frontend CI](https://github.com/YOUR_ORG/sales-manager/actions/workflows/ci-frontend.yml/badge.svg)](https://github.com/YOUR_ORG/sales-manager/actions/workflows/ci-frontend.yml)
-[![Backend CI](https://github.com/YOUR_ORG/sales-manager/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/YOUR_ORG/sales-manager/actions/workflows/ci-backend.yml)
+[![Frontend CI](https://github.com/Paras2611/Small_Biz_Sales_Manager/actions/workflows/ci-frontend.yml/badge.svg)](https://github.com/Paras2611/Small_Biz_Sales_Manager/actions/workflows/ci-frontend.yml)
+[![Backend CI](https://github.com/Paras2611/Small_Biz_Sales_Manager/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/Paras2611/Small_Biz_Sales_Manager/actions/workflows/ci-backend.yml)
 
 A purpose-built, high-integrity sales CRM application modeling the full B2B commercial lifecycle: **Lead Capture → Qualification → Follow-up Activities → Opportunity Tracking → Commercial Quotation & Approval → Won Conversion**.
 
