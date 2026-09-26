@@ -5,85 +5,129 @@
 
 A high-integrity, enterprise-grade B2B Sales Management CRM application built for small and mid-sized enterprises.
 
-The platform orchestrates the complete commercial lifecycle: **Lead Capture → BANT Qualification → Activity & Follow-up Management → Deal Opportunity Tracking → Multi-line Quotations & Tiered Approvals → Won Conversion & Revenue Analytics**.
+The platform orchestrates the complete commercial lifecycle: **Lead Capture → BANT Qualification → Activity & Follow-up Management → Deal Opportunity Tracking → Multi-line Quotations & Commercial Approvals → Won Conversion & Revenue Analytics**.
 
 ---
 
-## 1. Technology Stack
-
-- **Backend**: Java 21, Spring Boot 3.3.4, Spring Web, Spring Data JPA, Hibernate ORM, Spring Security, JJWT (HMAC-SHA256), Maven
-- **Frontend**: React 18, Vite, Vanilla CSS design tokens, Lucide Icons, Axios, Recharts
-- **Database**: PostgreSQL (Production on Render) with embedded H2 fallback for zero-config local development
-- **Deployment**: Render (Java 21 Web Service + Managed PostgreSQL), Vercel (React SPA)
+### 🌐 Live Production Deployments
+- 💻 **Frontend Web App (Vercel)**: [https://small-biz-sales-manager.vercel.app](https://small-biz-sales-manager.vercel.app)
+- ⚙️ **Backend REST API & STOMP WebSockets (Render)**: [https://small-biz-sales-backend.onrender.com](https://small-biz-sales-backend.onrender.com)
+- 📖 **Full System Details & Presentation Blueprint**: [`details.md`](file:///d:/Thinqlou_Software/details.md)
 
 ---
 
-## 2. Architecture
+## 🏗️ 1. System Architecture
 
-```
-React 18 + Vite (SPA)
-        │
-        │ HTTPS REST / JSON (JWT Bearer Auth)
-        ▼
-Java 21 + Spring Boot 3.3.4
-  ├── Controller Layer        (REST Endpoints, DTO Validation)
-  ├── Service Layer           (B2B Business Logic, Transactions, Auditing)
-  ├── Security Layer          (Spring Security Filter Chain, JWT Validation)
-  ├── AI Assistant Layer      (Deterministic BANT Scoring + Gemini Fallback)
-  ├── Repository Layer        (Spring Data JPA / Hibernate ORM)
-  └── Database Layer
-        │
-        ▼
-PostgreSQL / Embedded H2 Database
+```mermaid
+graph TD
+    classDef client fill:#1f2937,stroke:#3b82f6,stroke-width:2px,color:#fff;
+    classDef backend fill:#111827,stroke:#10b981,stroke-width:2px,color:#fff;
+    classDef external fill:#1e1b4b,stroke:#8b5cf6,stroke-width:2px,color:#fff;
+    classDef db fill:#312e81,stroke:#f59e0b,stroke-width:2px,color:#fff;
+
+    subgraph ClientLayer ["1. Client Tier (Vercel CDN Edge)"]
+        UserBrowser["💻 Sales Manager / Executive Web SPA"]:::client
+        MobileUser["📱 Sales Representative Mobile Browser"]:::client
+    end
+
+    subgraph BackendLayer ["2. Backend Container Services (Render Application Cloud)"]
+        APIGateway["🌐 Spring Security JWT Authentication Filter"]:::backend
+        Controllers["🕹️ REST Controller Layer (/api/v1/*)"]:::backend
+        BusinessLogic["⚙️ Transactional Service Layer (@Transactional)"]:::backend
+        SyncEngine["⚡ JPA SyncEventListener (@PostUpdate / @PostPersist)"]:::backend
+        STOMPServer["📡 STOMP WebSocket Broker (/ws & /topic/updates)"]:::backend
+        AIEngine["🤖 AI Advisory Service (Gemini 1.5 Flash + Fallback)"]:::backend
+    end
+
+    subgraph DataLayer ["3. Database & AI Engine"]
+        PostgresDB[("🐘 Render Managed PostgreSQL Database")]:::db
+        GeminiAPI["🧠 Google Gemini 1.5 Flash AI API"]:::external
+    end
+
+    UserBrowser -->|HTTPS REST API| APIGateway
+    MobileUser -->|HTTPS REST API| APIGateway
+    UserBrowser <-->|WSS / STOMP WebSockets| STOMPServer
+    MobileUser <-->|WSS / STOMP WebSockets| STOMPServer
+
+    APIGateway --> Controllers
+    Controllers --> BusinessLogic
+    BusinessLogic --> AIEngine
+    AIEngine <-->|HTTPS API| GeminiAPI
+
+    BusinessLogic <-->|Spring Data JPA| PostgresDB
+    BusinessLogic -->|JPA Mutation Hook| SyncEngine
+    SyncEngine -->|Broadcast Update Message| STOMPServer
 ```
 
 ---
 
-## 3. Business Problem & Complete Workflow
+## ⚡ 2. Real-Time Atomic Sync Workflow Across Devices
 
-Small and medium enterprises frequently lose revenue due to:
-1. **Unqualified leads** stagnating in sales pipelines without clear next steps.
-2. **Untracked follow-ups** slipping past due dates, damaging customer relationships.
-3. **Quotation errors** in discount calculations, tax application, and unauthorized pricing commitments.
-4. **Premature deal closures** where sales reps close deals without management sign-off on commercials.
+All database modifications trigger JPA lifecycle hooks that broadcast events across active STOMP WebSocket client connections. Any action taken on one device reflects instantly across all logged-in devices without page refreshes.
 
-### End-to-End Sales Pipeline
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Rep as Sales Representative (Device A)
+    participant UI1 as React SPA (Device A)
+    participant Backend as Spring Boot REST API
+    participant DB as PostgreSQL Database
+    participant Hook as SyncEventListener
+    participant WS as STOMP Broker (/topic/updates)
+    participant UI2 as React SPA (Device B Manager)
 
+    Rep->>UI1: Advance Opportunity Stage to "Proposal"
+    UI1->>Backend: PATCH /api/v1/opportunities/{id}
+    Backend->>DB: UPDATE opportunities SET stage='PROPOSAL'
+    DB-->>Backend: SQL 200 OK (Transaction Committed)
+    DB->>Hook: Trigger @PostUpdate(Opportunity)
+    Hook->>WS: Broadcast SyncEvent(Opportunity, UPDATE, id=104)
+    WS-->>UI1: STOMP Event /topic/updates
+    WS-->>UI2: STOMP Event /topic/updates
+    UI2->>UI2: Re-fetch / Update Local Zustand Store
+    Note over UI2: Manager UI instantly displays updated stage on Kanban Board!
 ```
-Lead Inbound
-    │
-    ▼
-Qualification (BANT: Budget, Authority, Need, Timeline)
-    │
-    ▼
-Follow-up Engagement (Calls, Demos, Meetings with Overdue Alerts)
-    │
-    ▼
-Opportunity Pipeline (Prospecting → Proposal → Negotiation)
-    │
-    ▼
-Quotation Generation (Line items, Product pricing, Tax % and Discount %)
-    │
-    ▼
-Manager Approval (Pending Approval → Approved / Rejected)
-    │
-    ▼
-Closed Won Conversion (Enforces approved quotation before winning deal)
-    │
-    ▼
-Real-time Analytics & Executive Dashboard
-```
-
-### Core Business Rules & Integrity Constraints
-- **Lead Qualification**: A lead can only be converted to an opportunity once it is marked as `Qualified`.
-- **Idempotent Conversion**: Converting a lead to an opportunity is idempotent; subsequent attempts return `409 Conflict`.
-- **Quotation Precision**: Commercial math enforces `BigDecimal` with `RoundingMode.HALF_UP` to prevent fractional currency discrepancies.
-- **Approval Gate**: Deals cannot be marked `Closed Won` without a valid, manager-`Approved` quotation linked to the opportunity.
-- **Dynamic Overdue Tracking**: Scheduled follow-ups automatically surface as overdue the moment `due_at < Instant.now()`.
 
 ---
 
-## 4. Pre-Seeded Demo Credentials
+## 🔄 3. Core Commercial Workflows
+
+### Lead Capture & BANT Qualification Workflow
+
+```mermaid
+flowchart LR
+    InboundLead["1. Inbound Lead Captured"] --> Contacted["2. Outreach Attempted"]
+    Contacted --> BANT{"3. BANT Score Check (Budget, Authority, Need, Timeline)"}
+    BANT -- Qualified --> LeadQualified["Status: QUALIFIED"]
+    BANT -- Unqualified --> LeadUnqualified["Status: UNQUALIFIED"]
+    LeadQualified --> Convert["4. Convert Lead to Opportunity & Customer"]
+```
+
+### Commercial Quotation & Approval Gate Workflow
+
+```mermaid
+flowchart TD
+    CreateQuote["1. Create Quotation Draft (Add Products & Discounts)"] --> MathCheck["2. Auto-Calculate Subtotal, Tax %, Total"]
+    MathCheck --> SubmitApproval["3. Submit for Manager Approval"]
+    SubmitApproval --> ManagerDecision{"4. Manager Review"}
+    ManagerDecision -- Approve --> StatusApproved["Status: APPROVED"]
+    ManagerDecision -- Reject --> StatusRejected["Status: REJECTED"]
+    StatusApproved --> MarkWon["5. Link Approved Quote -> Close Deal Won"]
+```
+
+---
+
+## 🛠️ 4. Technology Stack
+
+- **Backend**: Java 21, Spring Boot 3.3.4, Spring Web, Spring Data JPA, Hibernate ORM, Spring Security, JJWT (HMAC-SHA256), STOMP WebSockets, Maven
+- **Frontend**: React 18, Vite, Tailwind CSS, Vanilla CSS Tokens, Lucide Icons, Axios, Recharts, `@stomp/stompjs`
+- **Database**: Managed PostgreSQL on Render (with embedded H2 file fallback for zero-config local development)
+- **AI Layer**: Google Gemini 1.5 Flash API for automated lead scoring, pitch generation, and deal probability analysis
+- **Deployment**: Render (Java 21 Web Container + Managed PostgreSQL), Vercel (React SPA)
+
+---
+
+## 🔑 5. Pre-Seeded Demo Credentials
 
 The backend automatically seeds demo records and credentials on first boot if the database is empty:
 
@@ -95,147 +139,78 @@ The backend automatically seeds demo records and credentials on first boot if th
 
 ---
 
-## 5. API Overview
+## 📡 6. API Overview
 
-All endpoints support both `/api/v1/...` and `/api/...` prefixes.
+All endpoints support `/api/v1/...` and `/api/...` prefixes.
 
 ### Authentication (`/api/v1/auth`)
 - `POST /api/v1/auth/login` — Authenticate user and receive JWT bearer token
 - `GET /api/v1/auth/me` — Retrieve authenticated user profile
-- `POST /api/v1/auth/logout` — Invalidate session
 
 ### Leads (`/api/v1/leads`)
-- `GET /api/v1/leads` — Filter leads by search term, status, or owner
-- `POST /api/v1/leads` — Create new lead (with inline customer creation support)
-- `GET /api/v1/leads/{id}` — Retrieve lead details
-- `PATCH /api/v1/leads/{id}` — Update lead attributes
-- `DELETE /api/v1/leads/{id}` — Soft delete lead
-- `POST /api/v1/leads/{id}/qualify` — BANT qualification checklist
+- `GET /api/v1/leads` — Filter leads by search, status, or owner
+- `POST /api/v1/leads` — Create lead with optional inline customer creation
+- `POST /api/v1/leads/{id}/qualify` — Execute BANT qualification checklist
 - `POST /api/v1/leads/{id}/convert-opportunity` — Convert qualified lead into opportunity
 
 ### Opportunities (`/api/v1/opportunities`)
-- `GET /api/v1/opportunities` — List opportunities by stage, status, owner, or search
+- `GET /api/v1/opportunities` — List opportunities by stage, status, owner
 - `POST /api/v1/opportunities` — Create new deal opportunity
-- `GET /api/v1/opportunities/{id}` — Retrieve opportunity details
-- `PATCH /api/v1/opportunities/{id}` — Update opportunity stage or commercial value
 - `POST /api/v1/opportunities/{id}/mark-won` — Close won deal (requires approved quote ID)
 - `POST /api/v1/opportunities/{id}/mark-lost` — Close lost deal with structured reason
 
 ### Quotations (`/api/v1/quotations`)
-- `GET /api/v1/quotations` — List quotations (filterable by `opportunity_id`, `status`)
-- `POST /api/v1/quotations` — Create quote with product line snapshots, discounts, and taxes
-- `GET /api/v1/quotations/{id}` — Retrieve quotation details
-- `POST /api/v1/quotations/{id}/submit` — Submit quotation for manager approval
-- `POST /api/v1/quotations/{id}/approve` — Approve quotation (Sales Manager / Admin)
+- `GET /api/v1/quotations` — List quotations
+- `POST /api/v1/quotations` — Create quote with product line snapshots
+- `POST /api/v1/quotations/{id}/approve` — Commercial approval (Manager / Admin)
 - `POST /api/v1/quotations/{id}/reject` — Reject quotation with feedback
 
-### Follow-Ups (`/api/v1/followups`)
+### Follow-Ups & Tasks (`/api/v1/followups`)
 - `GET /api/v1/followups` — List follow-ups (`overdue`, `due_today`, `upcoming`)
 - `POST /api/v1/followups` — Schedule call, meeting, demo, or email
-- `GET /api/v1/followups/{id}` — Retrieve follow-up details
-- `PATCH /api/v1/followups/{id}` — Reschedule or update notes
-- `POST /api/v1/followups/{id}/complete` — Record follow-up outcome
-
-### Dashboard & Analytics (`/api/v1/dashboard`, `/api/v1/reports`)
-- `GET /api/v1/dashboard/metrics` — Real-time KPIs, conversion rates, and top opportunities
-- `GET /api/v1/dashboard/funnel` — Sales funnel stage breakdown (Counts & Values)
-- `GET /api/v1/dashboard/overdue-followups` — Prioritized list of past-due engagements
-- `GET /api/v1/reports/pipeline` — Pipeline value grouped by stage
-- `GET /api/v1/reports/conversion-funnel` — End-to-end conversion attrition
-- `GET /api/v1/reports/quotation-status` — Quotation volume by state
-- `GET /api/v1/reports/owner-performance` — Performance metrics per sales representative
 
 ### AI Advisory Layer (`/api/v1/ai`)
-- `POST /api/v1/ai/lead-priority` — Deterministic/LLM lead prioritization (High/Medium/Low)
+- `POST /api/v1/ai/lead-priority` — AI lead BANT prioritization (High/Medium/Low)
 - `POST /api/v1/ai/lead-summary` — Strict 5-line executive deal summary
 - `POST /api/v1/ai/next-action` — Next best commercial action recommendation
 
-### Health Check & Keep-Alive (`/api/health`)
-- `GET /api/health` — Service uptime, database connectivity check (`SELECT 1`), and status
+### Health Check (`/api/health`)
+- `GET /api/health` — Service uptime, database check (`SELECT 1`), and status
 
 ---
 
-## 6. Local Setup Instructions
+## 🚀 7. Quickstart Local Setup
 
 ### Prerequisites
 - **Java**: JDK 21+
-- **Node.js**: 18+ (tested on Node 20 / 22)
+- **Node.js**: 18+ (Node 20 / 22 recommended)
 - **Git**
 
 ### Backend Setup (Spring Boot)
 
 ```bash
-# Navigate to backend directory
 cd backend
-
-# Run with Maven Wrapper (Linux / macOS)
 ./mvnw spring-boot:run
-
-# Run with Maven Wrapper (Windows PowerShell)
-.\mvnw.cmd spring-boot:run
 ```
+*(Windows PowerShell: `.\mvnw.cmd spring-boot:run`)*  
+Backend starts at `http://localhost:8080`. Automatically falls back to embedded H2 if no PostgreSQL is configured.
 
-The backend starts at `http://localhost:8080`.
-*Note: If no PostgreSQL credentials are provided, Spring Boot automatically boots with embedded H2 mode (`MODE=PostgreSQL`) for zero-friction local testing.*
-
-To run tests:
+To run full backend test suite (18 unit & integration tests):
 ```bash
 ./mvnw test
-```
-
-To package production artifact:
-```bash
-./mvnw clean package -DskipTests
 ```
 
 ### Frontend Setup (React + Vite)
 
 ```bash
-# Navigate to frontend directory
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start Vite development server
 npm run dev
 ```
-
-The frontend opens at `http://localhost:5173`.
-
----
-
-## 7. Cloud Deployment Guide
-
-### Backend Deployment on Render
-
-1. Create a **Web Service** on [Render](https://render.com).
-2. Connect your repository.
-3. Configure the service settings:
-   - **Environment**: `Java`
-   - **Root Directory**: `backend`
-   - **Build Command**: `./mvnw clean package -DskipTests`
-   - **Start Command**: `java -jar target/small-business-sales-1.0.0.jar`
-   - **Health Check Path**: `/api/health`
-4. Add Environment Variables:
-   - `DATABASE_URL`: Connection string from your Render PostgreSQL instance
-   - `PORT`: (Provided automatically by Render)
-   - `JWT_SECRET`: Random 256-bit secret
-   - `FRONTEND_URL`: URL of your deployed frontend (e.g. `https://your-crm.vercel.app`)
-   - `AI_API_KEY`: Google Gemini API key (optional; deterministic fallback active by default)
-   - `AI_MODEL`: `gemini-1.5-flash`
-
-### Frontend Deployment on Vercel
-
-1. Import your GitHub repository to [Vercel](https://vercel.com).
-2. Set **Root Directory** to `frontend`.
-3. Framework Preset: `Vite`.
-4. Configure Environment Variable:
-   - `VITE_API_URL`: `https://your-backend.onrender.com/api`
-5. Deploy.
+Frontend opens at `http://localhost:5173`.
 
 ---
 
-## 8. AI Development Documentation
+## 📄 8. Further Documentation
 
-Detailed documentation on how AI coding assistants were leveraged during the migration, prompt patterns, validation, and design review is available in [`docs/AI_DEVELOPMENT.md`](file:///d:/Thinqlou_Software/docs/AI_DEVELOPMENT.md).
+For complete detailed architecture blueprints, entity relationship diagrams, database schemas, security filter specs, and presentation pitch defense guides, refer to **[`details.md`](file:///d:/Thinqlou_Software/details.md)**.
