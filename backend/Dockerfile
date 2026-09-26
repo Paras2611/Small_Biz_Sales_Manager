@@ -26,7 +26,8 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 # Run as non-root user for security
-RUN groupadd -r spring && useradd -r -g spring spring
+RUN groupadd -r spring && useradd -r -g spring spring && \
+    mkdir -p /app/data && chown -R spring:spring /app
 USER spring:spring
 
 # Copy compiled JAR from build stage
