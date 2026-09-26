@@ -155,7 +155,76 @@ Once your Vercel URL is live:
 
 ---
 
-## 7. Post-Deployment Verification Checklist
+## 7. Preventing Render From Sleeping (Uptime Keep-Alive)
+
+On Render's free tier, web services automatically enter sleep mode after **15 minutes of inactivity**, causing the next visitor to experience a 30–50 second cold start delay.
+
+To keep your backend responsive 24/7 with zero cold starts, the backend provides an optimized, public keep-alive endpoint:
+
+```http
+GET /health
+GET /api/health
+GET /ping
+```
+
+### Why this Health Endpoint is Special
+Unlike a trivial status string, this endpoint:
+1. **Warms the PostgreSQL Pool**: Executes a lightweight `SELECT 1` query to prevent database connection drop-offs.
+2. **Tracks Response Latency**: Calculates database round-trip latency in milliseconds (`latency_ms`).
+3. **Monitors Process Uptime**: Returns seconds elapsed since server boot (`uptime_seconds`).
+4. **Has Zero Authentication**: Accessible to any external uptime crawler or cron service.
+
+Sample response:
+```json
+{
+  "status": "healthy",
+  "app": "Small Business Sales Manager",
+  "version": "2.0.0",
+  "environment": "production",
+  "database": "connected",
+  "latency_ms": 2.15,
+  "uptime_seconds": 18450,
+  "server_time": "2026-09-26T22:50:00.000000+00:00",
+  "keep_alive": "active"
+}
+```
+
+---
+
+### How to Configure 24/7 Uptime Monitoring
+
+Choose any of the following free methods:
+
+#### Method A: Automated GitHub Actions Cron (Built-in · Zero Setup)
+The repository includes `.github/workflows/keep-alive.yml` which automatically executes every **10 minutes**:
+1. Go to your GitHub repository: `https://github.com/Paras2611/Small_Biz_Sales_Manager/settings/variables/actions`.
+2. (Optional) Set repository variable `RENDER_HEALTH_URL` to your live Render endpoint:
+   ```text
+   https://sales-manager-api.onrender.com/health
+   ```
+3. GitHub Actions will trigger `curl` every 10 minutes, keeping the Render dyno and database warm continuously.
+
+#### Method B: UptimeRobot (Free 5-Minute Ping)
+1. Sign up for a free account at [UptimeRobot.com](https://uptimerobot.com).
+2. Click **Add New Monitor**.
+3. Set:
+   - **Monitor Type**: `HTTP(s)`
+   - **Friendly Name**: `Sales Manager API`
+   - **URL (or IP)**: `https://sales-manager-api.onrender.com/health`
+   - **Monitoring Interval**: `5 minutes` or `10 minutes`
+4. Click **Create Monitor**.
+5. UptimeRobot will ping the service periodically, ensuring Render never sleeps and immediately notifying you if the server encounters issues.
+
+#### Method C: Cron-job.org
+1. Sign up at [cron-job.org](https://cron-job.org).
+2. Create a new cron job:
+   - **URL**: `https://sales-manager-api.onrender.com/ping`
+   - **Schedule**: `Every 10 minutes` (`*/10 * * * *`)
+3. Save the job.
+
+---
+
+## 8. Post-Deployment Verification Checklist
 
 Verify your live production deployment:
 

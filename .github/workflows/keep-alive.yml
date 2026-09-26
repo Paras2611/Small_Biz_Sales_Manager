@@ -1,0 +1,22 @@
+name: Render Keep-Alive Monitor
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free-tier sleep (15 min inactivity timeout)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Backend Health Endpoint
+        run: |
+          API_URL="${{ vars.RENDER_HEALTH_URL || 'https://sales-manager-api.onrender.com/health' }}"
+          echo "Pinging $API_URL to keep server warm..."
+          HTTP_CODE=$(curl -s -o response.json -w "%{http_code}" "$API_URL")
+          echo "HTTP Status Code: $HTTP_CODE"
+          cat response.json || true
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "Warning: Received non-200 status code: $HTTP_CODE"
+          fi
