@@ -33,9 +33,7 @@ USER spring:spring
 # Copy compiled JAR from build stage
 COPY --from=build --chown=spring:spring /app/app.jar app.jar
 
-# Render injects PORT env variable (default 8080)
-EXPOSE 8080
-ENV PORT=8080
+# Render injects PORT env variable
 ENV SPRING_PROFILES_ACTIVE=prod
 
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
