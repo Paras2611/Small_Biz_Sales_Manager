@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: small-business-sales-backend
+    name: small-biz-sales-backend
     env: docker
     dockerfilePath: backend/Dockerfile
     dockerContext: backend
