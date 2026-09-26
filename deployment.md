@@ -47,9 +47,9 @@ Because the repository includes `render.yaml` at the root, Render provisions bot
 3. Connect your GitHub account and select the repository: `Paras2611/Small_Biz_Sales_Manager`.
 4. Render will read `render.yaml` and display the resources to be created:
    - **Service**: `small-business-sales-backend` (Web Service, Docker / Java 21)
-   - **Database**: `sales-manager-db` (Managed PostgreSQL)
-5. Click **Apply**.
-6. Render will provision the database, build the container image via `backend/Dockerfile` (Eclipse Temurin JDK 21), and launch the Spring Boot service automatically.
+5. Provide your PostgreSQL `DATABASE_URL` (paste the Internal Connection String from your existing Render PostgreSQL database).
+6. Click **Apply**.
+7. Render will build the container image via `backend/Dockerfile` (Eclipse Temurin JDK 21) and launch the Spring Boot service automatically.
 
 ---
 
