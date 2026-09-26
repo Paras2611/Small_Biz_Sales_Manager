@@ -15,38 +15,45 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         String dbUrl = environment.getProperty("DATABASE_URL");
-        if (dbUrl != null && !dbUrl.trim().isEmpty() && !dbUrl.startsWith("jdbc:")) {
-            try {
-                String cleanUrl = dbUrl.trim();
-                URI uri = new URI(cleanUrl);
-                
-                String host = uri.getHost();
-                int port = uri.getPort() != -1 ? uri.getPort() : 5432;
-                String path = uri.getPath(); // includes leading /
-                String query = uri.getQuery();
+        if (dbUrl != null && !dbUrl.trim().isEmpty()) {
+            String cleanUrl = dbUrl.trim();
+            String parseableUriStr = cleanUrl;
+            if (parseableUriStr.startsWith("jdbc:")) {
+                parseableUriStr = parseableUriStr.substring(5); // strip "jdbc:"
+            }
 
-                String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + (path != null ? path : "") + (query != null ? "?" + query : "");
+            if (parseableUriStr.startsWith("postgres://") || parseableUriStr.startsWith("postgresql://")) {
+                try {
+                    URI uri = new URI(parseableUriStr);
+                    String host = uri.getHost();
+                    if (host != null) {
+                        int port = uri.getPort() != -1 ? uri.getPort() : 5432;
+                        String path = uri.getPath(); // includes leading /
+                        String query = uri.getQuery();
 
-                Map<String, Object> map = new HashMap<>();
-                map.put("spring.datasource.url", jdbcUrl);
-                map.put("spring.datasource.driver-class-name", "org.postgresql.Driver");
+                        String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + (path != null ? path : "") + (query != null ? "?" + query : "");
 
-                if (uri.getUserInfo() != null) {
-                    String[] userParts = uri.getUserInfo().split(":", 2);
-                    map.put("spring.datasource.username", userParts[0]);
-                    if (userParts.length > 1) {
-                        map.put("spring.datasource.password", userParts[1]);
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("spring.datasource.url", jdbcUrl);
+                        map.put("spring.datasource.driver-class-name", "org.postgresql.Driver");
+
+                        if (uri.getUserInfo() != null) {
+                            String[] userParts = uri.getUserInfo().split(":", 2);
+                            map.put("spring.datasource.username", userParts[0]);
+                            if (userParts.length > 1) {
+                                map.put("spring.datasource.password", userParts[1]);
+                            }
+                        }
+
+                        environment.getPropertySources().addFirst(new MapPropertySource("renderDatabaseProperties", map));
                     }
+                } catch (Exception e) {
+                    String jdbcUrl = dbUrl.replace("postgres://", "jdbc:postgresql://")
+                                          .replace("postgresql://", "jdbc:postgresql://");
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("spring.datasource.url", jdbcUrl);
+                    environment.getPropertySources().addFirst(new MapPropertySource("renderDatabaseProperties", map));
                 }
-
-                environment.getPropertySources().addFirst(new MapPropertySource("renderDatabaseProperties", map));
-            } catch (Exception e) {
-                // Fallback replace if URI parsing fails
-                String jdbcUrl = dbUrl.replace("postgres://", "jdbc:postgresql://")
-                                      .replace("postgresql://", "jdbc:postgresql://");
-                Map<String, Object> map = new HashMap<>();
-                map.put("spring.datasource.url", jdbcUrl);
-                environment.getPropertySources().addFirst(new MapPropertySource("renderDatabaseProperties", map));
             }
         }
     }
@@ -56,4 +63,5 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         return Ordered.LOWEST_PRECEDENCE;
     }
 }
+
 
