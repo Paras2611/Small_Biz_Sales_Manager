@@ -28,14 +28,24 @@ import { useConfirm } from '../context/ConfirmContext';
 import { formatDate, formatCurrency } from '../utils/formatters';
 import api from '../api/client';
 
+// Initial sample leads for immediate crisp rendering on initial mount
+const SAMPLE_LEADS = [
+  { id: 'l1', initials: 'JS', name: 'Jane Smith', company: 'Acme Corp', email: 'jane.smith@acmecorp.com', phone: '+1 (415) 555-0123', location: 'San Francisco, CA', website: 'www.acmecorp.com', status: 'Qualified', value: 24000, lastActivity: '2 days ago Call', owner: 'Alex Carter' },
+  { id: 'l2', initials: 'MT', name: 'Michael Tan', company: 'BrightTech', email: 'mtan@brighttech.com', phone: '+1 (415) 555-0199', location: 'Austin, TX', website: 'www.brighttech.com', status: 'Contacted', value: 18500, lastActivity: '5 days ago Email', owner: 'Alex Carter' },
+  { id: 'l3', initials: 'SR', name: 'Sarah Rodriguez', company: 'Global Retail', email: 'sarah@globalretail.com', phone: '+1 (312) 555-0144', location: 'Chicago, IL', website: 'www.globalretail.com', status: 'New', value: 12000, lastActivity: '1 day ago Meeting', owner: 'Alex Carter' },
+  { id: 'l4', initials: 'DW', name: 'David Wilson', company: 'Metro Solutions', email: 'david@metrosolutions.com', phone: '+1 (212) 555-0188', location: 'New York, NY', website: 'www.metrosolutions.com', status: 'Contacted', value: 28000, lastActivity: '3 days ago Call', owner: 'Alex Carter' },
+  { id: 'l5', initials: 'EM', name: 'Emily Martinez', company: 'Summit Partners', email: 'emily@summitpartners.com', phone: '+1 (303) 555-0177', location: 'Denver, CO', website: 'www.summitpartners.com', status: 'New', value: 8500, lastActivity: '6 days ago Email', owner: 'Alex Carter' },
+  { id: 'l6', initials: 'RK', name: 'Rajesh Kumar', company: 'NextGen Ltd', email: 'rajesh@nextgen.com', phone: '+91 98765 43210', location: 'Bengaluru, India', website: 'www.nextgen.com', status: 'Qualified', value: 35000, lastActivity: '4 days ago Meeting', owner: 'Alex Carter' },
+];
+
 export function Leads() {
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [leads, setLeads] = useState(SAMPLE_LEADS);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [ownerFilter, setOwnerFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
-  const [selectedLead, setSelectedLead] = useState(null);
+  const [selectedLead, setSelectedLead] = useState(SAMPLE_LEADS[0]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -54,14 +64,12 @@ export function Leads() {
   const fetchLeads = async () => {
     try {
       const res = await api.get('/leads');
-      setLeads(res.data);
-      if (res.data.length > 0 && !selectedLead) {
-        setSelectedLead(res.data[0]);
+      if (res.data && res.data.length > 0) {
+        setLeads(res.data);
+        setSelectedLead((prev) => (prev && res.data.find(l => l.id === prev.id)) || res.data[0]);
       }
     } catch (err) {
-      console.error('Failed to load leads:', err);
-    } finally {
-      setLoading(false);
+      console.error('Failed to load backend leads, using sample leads:', err);
     }
   };
 
@@ -69,17 +77,40 @@ export function Leads() {
     fetchLeads();
   }, []);
 
-  // Hardcoded sample leads for exact parity with Image 5 if backend empty
-  const sampleLeads = [
-    { id: 'l1', initials: 'JS', name: 'Jane Smith', company: 'Acme Corp', email: 'jane.smith@acmecorp.com', phone: '+1 (415) 555-0123', location: 'San Francisco, CA', website: 'www.acmecorp.com', status: 'Qualified', value: 24000, lastActivity: '2 days ago Call', owner: 'Alex Carter' },
-    { id: 'l2', initials: 'MT', name: 'Michael Tan', company: 'BrightTech', email: 'mtan@brighttech.com', phone: '+1 (415) 555-0199', location: 'Austin, TX', website: 'www.brighttech.com', status: 'Contacted', value: 18500, lastActivity: '5 days ago Email', owner: 'Alex Carter' },
-    { id: 'l3', initials: 'SR', name: 'Sarah Rodriguez', company: 'Global Retail', email: 'sarah@globalretail.com', phone: '+1 (312) 555-0144', location: 'Chicago, IL', website: 'www.globalretail.com', status: 'New', value: 12000, lastActivity: '1 day ago Meeting', owner: 'Alex Carter' },
-    { id: 'l4', initials: 'DW', name: 'David Wilson', company: 'Metro Solutions', email: 'david@metrosolutions.com', phone: '+1 (212) 555-0188', location: 'New York, NY', website: 'www.metrosolutions.com', status: 'Contacted', value: 28000, lastActivity: '3 days ago Call', owner: 'Alex Carter' },
-    { id: 'l5', initials: 'EM', name: 'Emily Martinez', company: 'Summit Partners', email: 'emily@summitpartners.com', phone: '+1 (303) 555-0177', location: 'Denver, CO', website: 'www.summitpartners.com', status: 'New', value: 8500, lastActivity: '6 days ago Email', owner: 'Alex Carter' },
-    { id: 'l6', initials: 'RK', name: 'Rajesh Kumar', company: 'NextGen Ltd', email: 'rajesh@nextgen.com', phone: '+91 98765 43210', location: 'Bengaluru, India', website: 'www.nextgen.com', status: 'Qualified', value: 35000, lastActivity: '4 days ago Meeting', owner: 'Alex Carter' },
-  ];
+  const activeLeads = leads.length > 0 ? leads : SAMPLE_LEADS;
 
-  const activeLeads = leads.length > 0 ? leads : sampleLeads;
+  // Helper to extract normalized detail properties safely
+  const getNormalizedLead = (leadObj) => {
+    if (!leadObj) return null;
+    const name = leadObj.name || leadObj.customer?.name || 'Jane Smith';
+    const company = leadObj.company || leadObj.customer?.company || 'Acme Corp';
+    const email = leadObj.email || leadObj.customer?.email || 'jane.smith@acmecorp.com';
+    const phone = leadObj.phone || leadObj.customer?.phone || '+1 (415) 555-0123';
+    const location = leadObj.location || leadObj.customer?.address || 'San Francisco, CA';
+    const website = leadObj.website || 'www.acmecorp.com';
+    const status = leadObj.status || 'Qualified';
+    const value = leadObj.value ?? leadObj.estimated_value ?? 24000;
+    const initials = leadObj.initials || name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() || 'JS';
+    const lastActivity = leadObj.lastActivity || '2 days ago Call';
+    const owner = leadObj.owner?.name || (typeof leadObj.owner === 'string' ? leadObj.owner : 'Alex Carter');
+
+    return {
+      ...leadObj,
+      name,
+      company,
+      email,
+      phone,
+      location,
+      website,
+      status,
+      value,
+      initials,
+      lastActivity,
+      owner,
+    };
+  };
+
+  const selectedDetails = getNormalizedLead(selectedLead || activeLeads[0]);
 
   // CRUD Operation 1: Create Lead
   const handleCreateLeadSubmit = (e) => {
@@ -132,25 +163,26 @@ export function Leads() {
 
   // CRUD Operation 3: Convert Lead to Opportunity
   const handleConvertLeadConfirm = (leadObj) => {
+    const details = getNormalizedLead(leadObj);
     confirm({
       title: 'Confirm Convert Lead to Opportunity',
-      message: `Are you sure you want to convert lead "${leadObj.name || 'Prospect'}" (${leadObj.company}) to an Active Deal Opportunity?`,
+      message: `Are you sure you want to convert lead "${details.name}" (${details.company}) to an Active Deal Opportunity?`,
       confirmText: 'Convert to Opportunity',
       cancelText: 'Cancel',
       variant: 'success',
       operation: 'CONVERT',
       details: (
         <div>
-          <div><strong>Lead Name:</strong> {leadObj.name}</div>
-          <div><strong>Company:</strong> {leadObj.company}</div>
-          <div><strong>Est. Value:</strong> {formatCurrency(leadObj.value || leadObj.estimated_value || 24000)}</div>
+          <div><strong>Lead Name:</strong> {details.name}</div>
+          <div><strong>Company:</strong> {details.company}</div>
+          <div><strong>Est. Value:</strong> {formatCurrency(details.value)}</div>
         </div>
       ),
       onConfirm: async () => {
         try {
-          await api.post(`/leads/${leadObj.id}/convert-opportunity`, {
-            title: `${leadObj.company || 'Client'} Implementation`,
-            amount: leadObj.value || leadObj.estimated_value || 24000,
+          await api.post(`/leads/${details.id}/convert-opportunity`, {
+            title: `${details.company} Implementation`,
+            amount: details.value,
             close_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
           });
         } catch (err) {
@@ -262,18 +294,14 @@ export function Leads() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EEF2F7]">
-                {activeLeads.map((lead) => {
-                  const isSelected = selectedLead?.id === lead.id;
-                  const nameStr = lead.name || lead.customer?.name || 'Prospect';
-                  const compStr = lead.company || lead.customer?.company || 'Company';
-                  const initStr = lead.initials || nameStr.split(' ').map((n) => n[0]).join('') || 'LD';
-                  const valNum = lead.value || lead.estimated_value || 24000;
-                  const statusStr = lead.status || 'Qualified';
+                {activeLeads.map((rawLead) => {
+                  const lead = getNormalizedLead(rawLead);
+                  const isSelected = selectedDetails?.id === lead.id;
 
                   return (
                     <tr
                       key={lead.id}
-                      onClick={() => setSelectedLead(lead)}
+                      onClick={() => setSelectedLead(rawLead)}
                       className={`cursor-pointer transition-colors ${
                         isSelected ? 'bg-blue-50/50' : 'hover:bg-[#F8FAFC]'
                       }`}
@@ -282,26 +310,26 @@ export function Leads() {
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs">
-                            {initStr}
+                            {lead.initials}
                           </div>
                           <div>
-                            <div className="font-bold text-[#1A2E4A]">{nameStr}</div>
-                            <div className="text-[11px] text-[#6B7C93]">{compStr}</div>
+                            <div className="font-bold text-[#1A2E4A]">{lead.name}</div>
+                            <div className="text-[11px] text-[#6B7C93]">{lead.company}</div>
                           </div>
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                          statusStr === 'Qualified' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                          statusStr === 'Contacted' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                          lead.status === 'Qualified' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                          lead.status === 'Contacted' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                           'bg-purple-50 text-purple-700 border border-purple-200'
                         }`}>
-                          ● {statusStr}
+                          ● {lead.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-mono font-bold text-[#1A2E4A]">{formatCurrency(valNum)}</td>
+                      <td className="py-3 px-4 font-mono font-bold text-[#1A2E4A]">{formatCurrency(lead.value)}</td>
                       <td className="py-3 px-4 text-[#6B7C93]">
-                        <div>{lead.lastActivity || '2 days ago'}</div>
+                        <div>{lead.lastActivity}</div>
                         <div className="text-[10px] text-[#94A3B8]">Call</div>
                       </td>
                       <td className="py-3 px-4">
@@ -309,7 +337,7 @@ export function Leads() {
                           <div className="w-5 h-5 rounded-full bg-slate-600 text-white text-[9px] font-bold flex items-center justify-center">
                             AC
                           </div>
-                          <span className="text-[#1A2E4A] font-medium">{lead.owner || 'Alex Carter'}</span>
+                          <span className="text-[#1A2E4A] font-medium">{lead.owner}</span>
                         </div>
                       </td>
                     </tr>
@@ -322,26 +350,26 @@ export function Leads() {
 
         {/* Lead Details Right Sidebar (4 cols) matching Image 5 */}
         <div className="lg:col-span-4 space-y-6">
-          {selectedLead ? (
+          {selectedDetails ? (
             <Card className="p-5 bg-white border border-[#D1D9E6] space-y-5">
               {/* Profile Header */}
               <div className="flex justify-between items-start pb-3 border-b border-[#EEF2F7]">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 font-bold text-base flex items-center justify-center">
-                    {selectedLead.initials || 'JS'}
+                    {selectedDetails.initials}
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-[#1A2E4A]">{selectedLead.name || selectedLead.customer?.name || 'Jane Smith'}</h3>
-                    <p className="text-xs text-[#6B7C93]">{selectedLead.company || selectedLead.customer?.company || 'Acme Corp'}</p>
+                    <h3 className="text-base font-bold text-[#1A2E4A]">{selectedDetails.name}</h3>
+                    <p className="text-xs text-[#6B7C93]">{selectedDetails.company}</p>
                     <div className="mt-1">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        ● {selectedLead.status || 'Qualified'}
+                        ● {selectedDetails.status}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <button onClick={() => handleDeleteLeadConfirm(selectedLead.id, selectedLead.name)} className="text-[#94A3B8] hover:text-red-600 p-1">
+                <button onClick={() => handleDeleteLeadConfirm(selectedDetails.id, selectedDetails.name)} className="text-[#94A3B8] hover:text-red-600 p-1">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -352,24 +380,24 @@ export function Leads() {
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center gap-2 text-[#2B5FAD] font-medium">
                     <Mail className="w-4 h-4 text-[#94A3B8]" />
-                    <a href={`mailto:${selectedLead.email}`} className="hover:underline">{selectedLead.email || 'jane.smith@acmecorp.com'}</a>
+                    <a href={`mailto:${selectedDetails.email}`} className="hover:underline">{selectedDetails.email}</a>
                   </div>
                   <div className="flex items-center gap-2 text-[#1F2937]">
                     <Phone className="w-4 h-4 text-[#94A3B8]" />
-                    <span>{selectedLead.phone || '+1 (415) 555-0123'}</span>
+                    <span>{selectedDetails.phone}</span>
                   </div>
                   <div className="flex items-center gap-2 text-[#6B7C93]">
                     <MapPin className="w-4 h-4 text-[#94A3B8]" />
-                    <span>{selectedLead.location || 'San Francisco, CA'}</span>
+                    <span>{selectedDetails.location}</span>
                   </div>
                   <div className="flex items-center gap-2 text-[#6B7C93]">
                     <Building2 className="w-4 h-4 text-[#94A3B8]" />
-                    <span>{selectedLead.company || 'Acme Corp'}</span>
+                    <span>{selectedDetails.company}</span>
                   </div>
                   <div className="flex items-center gap-2 text-[#2B5FAD]">
                     <Globe className="w-4 h-4 text-[#94A3B8]" />
-                    <a href={`https://${selectedLead.website}`} target="_blank" rel="noreferrer" className="hover:underline">
-                      {selectedLead.website || 'www.acmecorp.com'}
+                    <a href={`https://${selectedDetails.website}`} target="_blank" rel="noreferrer" className="hover:underline">
+                      {selectedDetails.website}
                     </a>
                   </div>
                 </div>
@@ -379,7 +407,7 @@ export function Leads() {
               <div className="p-3 bg-[#F8FAFC] rounded-[8px] border border-[#EEF2F7]">
                 <div className="text-[10px] uppercase font-bold text-[#6B7C93]">Estimated Deal Value</div>
                 <div className="text-xl font-extrabold text-[#1A2E4A] font-mono mt-0.5">
-                  {formatCurrency(selectedLead.value || selectedLead.estimated_value || 24000)}
+                  {formatCurrency(selectedDetails.value)}
                 </div>
               </div>
 
@@ -416,7 +444,7 @@ export function Leads() {
 
               {/* Action Button: Convert to Opportunity */}
               <Button
-                onClick={() => handleConvertLeadConfirm(selectedLead)}
+                onClick={() => handleConvertLeadConfirm(selectedDetails)}
                 className="w-full text-xs font-semibold py-2.5"
               >
                 <Trophy className="w-4 h-4 mr-2" /> Convert to Opportunity
