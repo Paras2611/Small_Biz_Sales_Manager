@@ -17,6 +17,16 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         String dbUrl = environment.getProperty("DATABASE_URL");
         if (dbUrl != null && !dbUrl.trim().isEmpty()) {
             String cleanUrl = dbUrl.trim();
+
+            // Ignore placeholders or template strings
+            if (cleanUrl.contains("dpg-xxxxxxxxxxxx-a") || 
+                cleanUrl.contains("your_secure_password") || 
+                cleanUrl.contains("your_database_url") ||
+                cleanUrl.contains("<host>") ||
+                cleanUrl.contains("YOUR_")) {
+                return;
+            }
+
             String parseableUriStr = cleanUrl;
             if (parseableUriStr.startsWith("jdbc:")) {
                 parseableUriStr = parseableUriStr.substring(5); // strip "jdbc:"

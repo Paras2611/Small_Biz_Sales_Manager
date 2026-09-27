@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.DriverManager;
 
 @Configuration
 public class DataSourceConfig {
@@ -36,6 +38,8 @@ public class DataSourceConfig {
         String dbPass = password;
         String driver = driverClassName;
 
+        boolean isPostgres = false;
+
         if (jdbcUrl != null && !jdbcUrl.isBlank()) {
             String parseableUriStr = jdbcUrl.trim();
             if (parseableUriStr.startsWith("jdbc:")) {
@@ -43,6 +47,7 @@ public class DataSourceConfig {
             }
 
             if (parseableUriStr.startsWith("postgres://") || parseableUriStr.startsWith("postgresql://")) {
+                isPostgres = true;
                 try {
                     URI uri = new URI(parseableUriStr);
                     String host = uri.getHost();
@@ -68,16 +73,41 @@ public class DataSourceConfig {
                             }
                         }
                         driver = "org.postgresql.Driver";
-                        log.info("Successfully configured PostgreSQL DataSource for host: {}:{}", host, port);
+                        log.info("Configured PostgreSQL DataSource for host: {}:{}", host, port);
                     }
                 } catch (Exception e) {
                     log.warn("Failed to parse PostgreSQL URI, using fallback: {}", e.getMessage());
                 }
+            } else if (jdbcUrl.startsWith("jdbc:postgresql:")) {
+                isPostgres = true;
+                driver = "org.postgresql.Driver";
             }
         }
 
-        if (jdbcUrl != null && jdbcUrl.startsWith("jdbc:postgresql:")) {
-            driver = "org.postgresql.Driver";
+        // Resilient connection check for PostgreSQL to prevent application crash on startup if DB is down/misconfigured
+        if (isPostgres && jdbcUrl != null && jdbcUrl.startsWith("jdbc:postgresql:")) {
+            log.info("Testing PostgreSQL connection to: {}", sanitizeUrl(jdbcUrl));
+            boolean connectionOk = false;
+            try {
+                Class.forName("org.postgresql.Driver");
+                DriverManager.setLoginTimeout(4);
+                try (Connection conn = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
+                    if (conn.isValid(3)) {
+                        connectionOk = true;
+                        log.info("PostgreSQL database connection verified successfully.");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("PostgreSQL connection failed ({}: {}).", e.getClass().getSimpleName(), e.getMessage());
+            }
+
+            if (!connectionOk) {
+                log.warn("Falling back to embedded H2 database to ensure smooth web server startup.");
+                jdbcUrl = "jdbc:h2:file:./data/salescrm;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL";
+                dbUser = "sa";
+                dbPass = "";
+                driver = "org.h2.Driver";
+            }
         }
 
         if (driver == null || driver.isBlank()) {
@@ -94,6 +124,11 @@ public class DataSourceConfig {
                 .password(dbPass)
                 .driverClassName(driver)
                 .build();
+    }
+
+    private String sanitizeUrl(String url) {
+        if (url == null) return "";
+        return url.replaceAll(":[^/@]+@", ":****@");
     }
 }
 
