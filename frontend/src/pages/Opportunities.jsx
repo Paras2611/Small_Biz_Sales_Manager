@@ -563,9 +563,12 @@ export function Opportunities() {
               </div>
 
               {/* View Full Details Button matching Screenshot */}
-              <Button className="w-full text-xs font-semibold py-2.5 bg-[#2B5FAD] hover:bg-[#1E40AF]">
+              <Link
+                to={`/opportunities/${selectedOpp.id}`}
+                className="w-full text-xs font-semibold py-2.5 bg-[#2B5FAD] hover:bg-[#1E40AF] text-white rounded-[6px] flex items-center justify-center transition-colors"
+              >
                 View Full Details <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
+              </Link>
 
               {/* Mark Won & Mark Lost Action Buttons matching Screenshot */}
               <div className="flex gap-2 pt-1">

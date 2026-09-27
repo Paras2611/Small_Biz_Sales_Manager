@@ -8,6 +8,7 @@ import { Leads } from './pages/Leads';
 import { LeadDetail } from './pages/LeadDetail';
 import { Followups } from './pages/Followups';
 import { Opportunities } from './pages/Opportunities';
+import { OpportunityDetail } from './pages/OpportunityDetail';
 import { Quotation } from './pages/Quotation';
 import { Products } from './pages/Products';
 import { Reports } from './pages/Reports';
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="activities" element={<Followups />} />
           <Route path="followups" element={<Followups />} />
           <Route path="opportunities" element={<Opportunities />} />
+          <Route path="opportunities/:id" element={<OpportunityDetail />} />
           <Route path="quotations" element={<Quotation />} />
           <Route path="products" element={<Products />} />
           <Route path="reports" element={<Reports />} />
