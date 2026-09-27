@@ -22,6 +22,11 @@
 7. [API & STOMP WebSocket Protocol Specs](#7-api--stomp-websocket-protocol-specs)
 8. [Cloud Infrastructure & Deployment Topology](#8-cloud-infrastructure--deployment-topology)
 9. [Presentation & Live Demo Cheat Sheet](#9-presentation--live-demo-cheat-sheet)
+10. [Frontend Component Architecture & State Management](#10-frontend-component-architecture--state-management)
+11. [Resilient Database Architecture & Post-Processor Mechanics](#11-resilient-database-architecture--post-processor-mechanics)
+12. [Comprehensive Environment Variables Matrix](#12-comprehensive-environment-variables-matrix)
+13. [Testing & Quality Assurance Suite](#13-testing--quality-assurance-suite)
+14. [Automated DevOps Keep-Alive Pipeline](#14-automated-devops-keep-alive-pipeline)
 
 ---
 
@@ -394,3 +399,135 @@ flowchart LR
    - **Sales Executive**: `arjun.shah@salescrm.demo` / `Exec@2026`
    - **Sales Manager**: `priya.mehta@salescrm.demo` / `Manager@2026`
    - **Administrator**: `admin@salescrm.demo` / `Admin@2026`
+
+---
+
+## 10. Frontend Component Architecture & State Management
+
+The frontend is built as a single-page web application using **React 18**, **Vite**, **Tailwind CSS**, and **Zustand** state management.
+
+### Tech Stack Specifications:
+- **Core Library**: React 18 SPA (Vite 5 bundle system)
+- **Styling & UI**: Custom CSS Design Tokens & Glassmorphism UI components (Skeleton loaders, Badges, Modals, Buttons)
+- **Icons & Data Visualization**: `lucide-react`, `recharts` for revenue analytics and conversion funnels
+- **State Management**: **Zustand** (`useUIStore.js`) for persistent UI state, drawer toggles, active filter states, and reactive STOMP event dispatching
+- **Real-Time Client**: `@stomp/stompjs` over `sockjs-client` fallback
+
+### UI Route & View Map:
+
+| Route Path | View Component | Core Responsibility |
+| :--- | :--- | :--- |
+| `/login` | `Login.jsx` | JWT Authentication & Demo Role Switcher |
+| `/dashboard` | `Dashboard.jsx` | KPI metrics, revenue velocity charts, conversion funnels & real-time activity feeds |
+| `/leads` | `Leads.jsx` | Lead table & Kanban view, BANT evaluation, AI Lead Scoring drawer, and Lead-to-Opportunity conversion modal |
+| `/opportunities` | `Opportunities.jsx` | Interactive pipeline Kanban board, stage drag-and-drop, and quotation linking |
+| `/quotations` | `Quotations.jsx` | Commercial quote generator, line-item calculator (GST + discounts), and manager approval workflows |
+| `/customers` | `Customers.jsx` | Customer account Directory, contact details, transaction history, and activity logs |
+| `/products` | `Products.jsx` | SKU management, base unit pricing, GST tax configuration, and active/inactive toggles |
+| `/activities` | `Activities.jsx` | Interaction activity logging (Calls, Emails, Meetings, Demos) & overdue follow-up tracking |
+| `/ai-assistant` | `AIAssistant.jsx` | Gemini 1.5 Flash AI Sales Copilot for follow-up pitch drafting and win probability analysis |
+
+---
+
+## 11. Resilient Database Architecture & Post-Processor Mechanics
+
+The system incorporates a **dual-database design**: PostgreSQL in production (Render) and embedded H2 file database (`./data/salescrm`) for local execution and fail-safe fallback.
+
+```mermaid
+flowchart TD
+    AppStart["Spring Boot Application Startup"] --> EnvPostProcessor["1. DatabaseUrlEnvironmentPostProcessor"]
+    EnvPostProcessor --> FilterPlaceholders{"Filter Out Placeholders?\n(dpg-xxxxxxxxxxxx-a, etc.)"}
+    FilterPlaceholders -- Yes --> KeepH2Default["Use Default H2 File DB Configuration"]
+    FilterPlaceholders -- No --> ParseURI["Parse Render postgres:// URI into JDBC Format"]
+
+    ParseURI --> DataSourceBean["2. DataSourceConfig (@Bean @Primary)"]
+    KeepH2Default --> DataSourceBean
+
+    DataSourceBean --> IsPostgresCheck{"Is Configured URL PostgreSQL?"}
+    IsPostgresCheck -- No --> BuildH2["Return H2 File DataSource (MODE=PostgreSQL)"]
+    IsPostgresCheck -- Yes --> TestConnection["3. Test Connection (DriverManager.setLoginTimeout: 4s)"]
+
+    TestConnection -- Success --> BuildPostgres["Return Verified PostgreSQL DataSource"]
+    TestConnection -- Failed/Unreachable --> LogWarning["Log SQLState 08001 Warning"]
+    LogWarning --> FallbackH2["Seamless Fallback to Embedded H2 Database"]
+    FallbackH2 --> BuildH2
+
+    BuildPostgres --> InitJPA["4. Initialize JPA EntityManagerFactory & Run DataInitializer"]
+    BuildH2 --> InitJPA
+```
+
+### Key Technical Safeguards:
+1. **Placeholder Guard**: Automatically detects unconfigured environment templates (e.g., `dpg-xxxxxxxxxxxx-a`, `your_secure_password`), preventing attempts to resolve non-existent hosts.
+2. **Non-Blocking Connection Verification**: Executes a fast login test prior to HikariCP pool creation. If PostgreSQL is unreachable, the system gracefully falls back to embedded H2 without crashing the web container.
+3. **Automated Data Seeding (`DataInitializer.java`)**: On initial startup against an empty database, Spring Boot automatically seeds demo accounts, customers, products with GST tax rates, initial leads, opportunities, and activities.
+
+---
+
+## 12. Comprehensive Environment Variables Matrix
+
+### Backend Configuration (`backend/.env` / `backend/.env.render`)
+
+| Key | Default / Format | Description |
+| :--- | :--- | :--- |
+| `PORT` | `8080` | Web server port (automatically injected by Render) |
+| `DATABASE_URL` | `postgres://user:pass@host:5432/dbname` | Render PostgreSQL Connection URI |
+| `DATABASE_USERNAME` | `sa` | Fallback DB username |
+| `DATABASE_PASSWORD` | `""` | Fallback DB password |
+| `JWT_SECRET` | *(256-bit base64 random string)* | HMAC-SHA256 signature key for JWT tokens |
+| `FRONTEND_URL` | `https://small-biz-sales-manager.vercel.app` | Allowed CORS origin domain |
+| `AI_API_KEY` | *(Google AI Studio Key)* | Key for Google Gemini 1.5 Flash API |
+| `AI_MODEL` | `gemini-1.5-flash` | Gemini model tag |
+
+### Frontend Configuration (`frontend/.env` / `frontend/.env.vercel`)
+
+| Key | Default Value | Description |
+| :--- | :--- | :--- |
+| `VITE_API_URL` | `https://small-biz-sales-backend.onrender.com/api` | Backend REST API base URL |
+| `VITE_WS_URL` | `https://small-biz-sales-backend.onrender.com/ws` | STOMP WebSocket connection endpoint |
+
+---
+
+## 13. Testing & Quality Assurance Suite
+
+The backend contains a suite of automated unit and integration tests built using **JUnit 5**, **Spring Boot Test**, and **MockMvc**.
+
+```bash
+# Run clean compilation and execute all unit and integration tests
+./mvnw clean test
+```
+
+### Test Suite Summary (18 Passing Tests):
+
+| Test Class | Scope | Key Validations |
+| :--- | :--- | :--- |
+| `SecurityIntegrationTest` | Spring Security & Web | Verifies `/api/health` and `/health` public access, and ensures protected endpoints return HTTP 403 Forbidden without valid JWT. |
+| `AuthServiceTest` | Authentication & JWT | Validates credential verification, password hashing, and JWT token issuance. |
+| `LeadWorkflowTest` | Lead Operations | Validates lead creation, BANT scoring updates, and atomic conversion to Opportunity & Customer. |
+| `OpportunityWorkflowTest` | Sales Pipeline | Tests pipeline stage transitions, win probability calculations, and approved quote requirements. |
+| `QuotationCalculationTest` | Commercial Math | Verifies `BigDecimal` precision calculation for multi-line subtotals, GST taxes, discounts, and total prices. |
+| `SmallBusinessSalesApplicationTests` | Application Context | Verifies full Spring ApplicationContext bootstrap and dependency injection graph. |
+
+---
+
+## 14. Automated DevOps Keep-Alive Pipeline
+
+On Render's free tier, web services automatically sleep after **15 minutes of inactivity**, causing cold start delays. 
+
+To ensure **24/7 availability**, the project includes a scheduled **GitHub Actions workflow** ([`.github/workflows/keep-alive.yml`](file:///d:/Thinqlou_Software/.github/workflows/keep-alive.yml)):
+
+```yaml
+name: Keep-Alive Backend Health Ping
+on:
+  schedule:
+    - cron: '*/10 * * * *' # Pings every 10 minutes
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Backend
+        run: curl -s -f https://small-biz-sales-backend.onrender.com/api/health || echo "Ping failed"
+```
+
+This workflow automatically pings `/api/health` every 10 minutes, keeping the container warm and ensuring instant API responses for end users.

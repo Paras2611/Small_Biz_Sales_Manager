@@ -18,12 +18,12 @@ import { useUIStore } from '../../store/useUIStore';
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/leads', label: 'Leads', icon: Users },
-  { to: '/followups', label: 'Follow-ups', icon: CalendarCheck },
   { to: '/opportunities', label: 'Opportunities', icon: TrendingUp },
   { to: '/quotations', label: 'Quotations', icon: FileSpreadsheet },
+  { to: '/activities', label: 'Activities', icon: CalendarCheck },
   { to: '/products', label: 'Products', icon: Package },
   { to: '/reports', label: 'Reports', icon: BarChart3, roles: ['sales_manager', 'administrator'] },
-  { to: '/admin', label: 'Admin Settings', icon: Settings, roles: ['administrator'] },
+  { to: '/admin', label: 'Settings', icon: Settings, roles: ['administrator'] },
 ];
 
 export function Sidebar() {

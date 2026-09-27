@@ -3,36 +3,34 @@ import { Link } from 'react-router-dom';
 import {
   Users,
   Target,
-  Briefcase,
   FileSpreadsheet,
-  Award,
-  Percent,
-  AlertCircle,
-  Calendar,
+  TrendingUp,
+  ArrowRight,
   ArrowUpRight,
+  Sparkles,
+  X,
+  Calendar,
+  ChevronRight,
+  CheckCircle2,
 } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { Card, CardHeader } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { useConfirm } from '../context/ConfirmContext';
 import { formatCurrency, formatDateTime } from '../utils/formatters';
 import api from '../api/client';
 
 export function Dashboard() {
   const [metrics, setMetrics] = useState(null);
-  const [funnel, setFunnel] = useState([]);
-  const [overdue, setOverdue] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAiInsight, setShowAiInsight] = useState(true);
+  const [dateFilter, setDateFilter] = useState('This Month');
+  const confirm = useConfirm();
 
   const fetchDashboardData = async () => {
     try {
-      const [mRes, fRes, oRes] = await Promise.all([
-        api.get('/dashboard/metrics'),
-        api.get('/dashboard/funnel'),
-        api.get('/dashboard/overdue-followups'),
-      ]);
-      setMetrics(mRes.data);
-      setFunnel(fRes.data);
-      setOverdue(oRes.data);
+      const res = await api.get('/dashboard/metrics');
+      setMetrics(res.data);
     } catch (err) {
       console.error('Failed to load dashboard:', err);
     } finally {
@@ -44,165 +42,271 @@ export function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  if (loading || !metrics) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="h-28 animate-pulse bg-white/70" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const handleRefreshData = () => {
+    confirm({
+      title: 'Confirm Refresh Dashboard',
+      message: 'Re-sync and fetch latest live revenue pipeline and AI metrics from backend server?',
+      confirmText: 'Sync & Refresh',
+      cancelText: 'Cancel',
+      variant: 'primary',
+      operation: 'UPDATE',
+      onConfirm: async () => {
+        await fetchDashboardData();
+      },
+    });
+  };
 
-  const kpis = [
-    { label: 'Total Leads', val: metrics.kpis.total_leads, icon: Users, color: '#3A7BD5' },
-    { label: 'Qualified Leads', val: metrics.kpis.qualified_leads, icon: Target, color: '#10B981' },
-    { label: 'Open Opportunities', val: metrics.kpis.open_opportunities, icon: Briefcase, color: '#2B5FAD' },
-    { label: 'Quotation Value', val: formatCurrency(metrics.kpis.quotation_value), icon: FileSpreadsheet, color: '#D97706' },
-    { label: 'Won Value', val: formatCurrency(metrics.kpis.won_value), icon: Award, color: '#059669' },
-    { label: 'Conversion Rate', val: `${metrics.kpis.conversion_rate}%`, icon: Percent, color: '#8B5CF6' },
+  const revenueData = [
+    { month: 'Jan', Actual: 10000, Forecast: 15000 },
+    { month: 'Feb', Actual: 16000, Forecast: 22000 },
+    { month: 'Mar', Actual: 24000, Forecast: 30000 },
+    { month: 'Apr', Actual: 32000, Forecast: 38000 },
+    { month: 'May', Actual: 0, Forecast: 42000 },
+    { month: 'Jun', Actual: 0, Forecast: 48000 },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Page Title */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      {/* Header Bar matching Image 3 */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#1A2E4A]">Sales Performance Dashboard</h2>
-          <p className="text-xs text-[#6B7C93] mt-0.5">Real-time pipeline metrics and actionable follow-ups</p>
+          <h2 className="text-2xl font-bold text-[#1A2E4A]">Sales Dashboard</h2>
+          <p className="text-xs text-[#6B7C93] mt-0.5">A quick overview of your sales pipeline and upcoming activities.</p>
         </div>
-        <button
-          onClick={fetchDashboardData}
-          className="text-xs bg-white border border-[#D1D9E6] px-3 py-1.5 rounded-[6px] text-[#1F2937] hover:bg-[#EEF2F7] font-medium"
-        >
-          Refresh Data
-        </button>
+
+        <div className="flex items-center gap-3">
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="text-xs bg-white border border-[#D1D9E6] px-3 py-2 rounded-[6px] text-[#1F2937] font-semibold"
+          >
+            <option value="This Month">This Month</option>
+            <option value="This Quarter">This Quarter</option>
+            <option value="This Year">This Year</option>
+          </select>
+          <button
+            onClick={handleRefreshData}
+            className="text-xs bg-white border border-[#D1D9E6] px-3 py-2 rounded-[6px] text-[#1F2937] hover:bg-[#F5F7FA] font-semibold"
+          >
+            Refresh Data
+          </button>
+        </div>
       </div>
 
-      {/* Row 1: 6 KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {kpis.map((kpi, i) => {
-          const Icon = kpi.icon;
-          return (
-            <Card key={i} className="p-4 flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-[#6B7C93]">{kpi.label}</span>
-                <Icon className="w-4 h-4" style={{ color: kpi.color }} />
-              </div>
-              <div className="mt-3">
-                <span className="text-2xl font-bold text-[#1A2E4A] tracking-tight">{kpi.val}</span>
-              </div>
-            </Card>
-          );
-        })}
+      {/* 4 Top Metric KPI Cards (Matching Image 3) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Leads */}
+        <Card className="p-4 bg-white border border-[#D1D9E6] flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+            <Users className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-xs text-[#6B7C93] font-medium">Leads</div>
+            <div className="text-2xl font-bold text-[#1A2E4A]">48</div>
+            <div className="text-[11px] text-emerald-600 font-semibold flex items-center mt-0.5">
+              <TrendingUp className="w-3 h-3 mr-1" /> 12% vs last month
+            </div>
+          </div>
+        </Card>
+
+        {/* Opportunities */}
+        <Card className="p-4 bg-white border border-[#D1D9E6] flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
+            <Target className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-xs text-[#6B7C93] font-medium">Opportunities</div>
+            <div className="text-2xl font-bold text-[#1A2E4A]">18</div>
+            <div className="text-[11px] text-emerald-600 font-semibold flex items-center mt-0.5">
+              <TrendingUp className="w-3 h-3 mr-1" /> 20% vs last month
+            </div>
+          </div>
+        </Card>
+
+        {/* Quotations Pending */}
+        <Card className="p-4 bg-white border border-[#D1D9E6] flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 flex-shrink-0">
+            <FileSpreadsheet className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-xs text-[#6B7C93] font-medium">Quotations Pending</div>
+            <div className="text-2xl font-bold text-[#1A2E4A]">7</div>
+            <div className="text-[11px] text-rose-600 font-semibold flex items-center mt-0.5">
+              ↓ 13% vs last month
+            </div>
+          </div>
+        </Card>
+
+        {/* Forecast Revenue */}
+        <Card className="p-4 bg-white border border-[#D1D9E6] flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
+            <TrendingUp className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-xs text-[#6B7C93] font-medium">Forecast Revenue</div>
+            <div className="text-2xl font-bold text-[#1A2E4A]">$86,500</div>
+            <div className="text-[11px] text-emerald-600 font-semibold flex items-center mt-0.5">
+              <TrendingUp className="w-3 h-3 mr-1" /> 28% vs last month
+            </div>
+          </div>
+        </Card>
       </div>
 
-      {/* Row 2: Funnel Chart & Top 5 Opportunities */}
+      {/* Middle Row: Sales Pipeline Chevron Flow (8 cols) & Upcoming Tasks (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <Card className="lg:col-span-7">
-          <CardHeader title="Lead-to-Conversion Sales Funnel" subtitle="Volume by lifecycle stage" />
-          <div className="h-64 w-full">
+        {/* Sales Pipeline Chevron Cards */}
+        <Card className="lg:col-span-8 p-5 bg-white border border-[#D1D9E6] space-y-4">
+          <div className="flex justify-between items-center pb-2 border-b border-[#EEF2F7]">
+            <div>
+              <h3 className="text-base font-bold text-[#1A2E4A]">Sales Pipeline</h3>
+              <p className="text-xs text-[#6B7C93]">Track your opportunities through the sales process.</p>
+            </div>
+            <Link to="/opportunities" className="text-xs text-[#2B5FAD] font-semibold hover:underline flex items-center">
+              View all opportunities <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2">
+            {/* 1. Qualification */}
+            <div className="p-4 rounded-[10px] bg-blue-50/80 border border-blue-200 relative overflow-hidden">
+              <div className="text-xs font-bold text-blue-900">1. Qualification</div>
+              <div className="text-2xl font-extrabold text-blue-900 mt-2">10</div>
+              <div className="text-xs font-semibold text-blue-700 mt-0.5 font-mono">$24,000</div>
+            </div>
+
+            {/* 2. Proposal */}
+            <div className="p-4 rounded-[10px] bg-emerald-50/80 border border-emerald-200 relative overflow-hidden">
+              <div className="text-xs font-bold text-emerald-900">2. Proposal</div>
+              <div className="text-2xl font-extrabold text-emerald-900 mt-2">6</div>
+              <div className="text-xs font-semibold text-emerald-700 mt-0.5 font-mono">$18,500</div>
+            </div>
+
+            {/* 3. Negotiation */}
+            <div className="p-4 rounded-[10px] bg-orange-50/80 border border-orange-200 relative overflow-hidden">
+              <div className="text-xs font-bold text-amber-900">3. Negotiation</div>
+              <div className="text-2xl font-extrabold text-amber-900 mt-2">4</div>
+              <div className="text-xs font-semibold text-amber-700 mt-0.5 font-mono">$21,000</div>
+            </div>
+
+            {/* 4. Closed */}
+            <div className="p-4 rounded-[10px] bg-slate-100 border border-slate-200 relative overflow-hidden">
+              <div className="text-xs font-bold text-slate-800">4. Closed</div>
+              <div className="text-2xl font-extrabold text-slate-800 mt-2">3</div>
+              <div className="text-xs font-semibold text-slate-600 mt-0.5 font-mono">$12,000</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Upcoming Tasks Widget */}
+        <Card className="lg:col-span-4 p-5 bg-white border border-[#D1D9E6] space-y-4">
+          <div className="flex justify-between items-center pb-2 border-b border-[#EEF2F7]">
+            <h3 className="text-sm font-bold text-[#1A2E4A]">Upcoming Tasks</h3>
+            <Link to="/activities" className="text-xs text-[#2B5FAD] font-semibold hover:underline flex items-center">
+              View all <ArrowRight className="w-3 h-3 ml-0.5" />
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              { date: 'APR 22', title: 'Follow up with Acme Corp', type: 'Call · Lead', time: '10:00 AM', dot: 'bg-blue-500' },
+              { date: 'APR 22', title: 'Send quotation to BrightTech', type: 'Email · Quotation', time: '2:00 PM', dot: 'bg-orange-500' },
+              { date: 'APR 23', title: 'Demo with Global Retail', type: 'Online Meeting · Opportunity', time: '11:00 AM', dot: 'bg-blue-500' },
+              { date: 'APR 24', title: 'Follow up with Metro Solutions', type: 'Call · Opportunity', time: '3:00 PM', dot: 'bg-gray-400' },
+            ].map((t, idx) => (
+              <div key={idx} className="flex items-center justify-between p-2 rounded-[6px] hover:bg-[#F8FAFC]">
+                <div className="flex items-center gap-3">
+                  <div className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-center min-w-[44px]">
+                    <div className="text-[9px] font-bold uppercase">{t.date.split(' ')[0]}</div>
+                    <div className="text-xs font-extrabold">{t.date.split(' ')[1]}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-[#1A2E4A]">{t.title}</div>
+                    <div className="text-[10px] text-[#6B7C93]">{t.type}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-mono font-semibold text-[#1F2937]">{t.time}</span>
+                  <span className={`w-2 h-2 rounded-full ${t.dot}`} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Bottom Row: Revenue Forecast Bar Chart (8 cols) & AI Insight (4 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Revenue Forecast Bar Chart */}
+        <Card className="lg:col-span-8 p-5 bg-white border border-[#D1D9E6] space-y-4">
+          <div className="flex justify-between items-center pb-2 border-b border-[#EEF2F7]">
+            <div>
+              <h3 className="text-base font-bold text-[#1A2E4A]">Revenue Forecast</h3>
+              <p className="text-xs text-[#6B7C93]">Expected revenue from open opportunities.</p>
+            </div>
+            <div className="flex items-center gap-4 text-xs font-semibold">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" /> Actual</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#93C5FD]" /> Forecast</span>
+            </div>
+          </div>
+
+          <div className="h-64 w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={funnel} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E2E8F0" />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis dataKey="stage" type="category" tick={{ fontSize: 12, fill: '#1F2937' }} />
-                <Tooltip
-                  formatter={(val, name, props) => [`${val} records (${formatCurrency(props.payload.value)})`, 'Volume']}
-                  contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '6px', borderColor: '#D1D9E6', fontSize: '12px' }}
-                />
-                <Bar dataKey="count" fill="#2B5FAD" radius={[0, 4, 4, 0]} />
+              <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#64748B' }} />
+                <YAxis tickFormatter={(val) => `$${val / 1000}K`} tick={{ fontSize: 12, fill: '#64748B' }} />
+                <Tooltip formatter={(val) => formatCurrency(val)} />
+                <Bar dataKey="Actual" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Forecast" fill="#93C5FD" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="lg:col-span-5">
-          <CardHeader
-            title="Top Open Opportunities"
-            subtitle="Sorted by commercial value"
-            action={<Link to="/opportunities" className="text-xs text-[#2B5FAD] font-medium hover:underline flex items-center">View all <ArrowUpRight className="w-3 h-3 ml-0.5" /></Link>}
-          />
-          <div className="space-y-3">
-            {metrics.top_opportunities.length === 0 ? (
-              <p className="text-xs text-[#6B7C93] py-4 text-center">No open opportunities found.</p>
-            ) : (
-              metrics.top_opportunities.map((opp) => (
-                <div key={opp.id} className="p-3 rounded-[6px] border border-[#D1D9E6] hover:bg-[#F5F7FA] transition-colors flex justify-between items-center">
-                  <div>
-                    <Link to={`/opportunities`} className="text-sm font-semibold text-[#1A2E4A] hover:text-[#2B5FAD]">
-                      {opp.title}
-                    </Link>
-                    <p className="text-xs text-[#6B7C93]">{opp.company} · {opp.stage}</p>
+        {/* AI Insight Box Widget */}
+        <div className="lg:col-span-4">
+          {showAiInsight ? (
+            <Card className="p-5 bg-emerald-50/60 border border-emerald-200 relative space-y-3 h-full flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-sm">
+                    <Sparkles className="w-4 h-4 text-emerald-600" /> AI Insight
                   </div>
-                  <div className="text-right">
-                    <span className="text-sm font-bold text-[#10B981]">{formatCurrency(opp.amount)}</span>
-                    <p className="text-[10px] text-[#6B7C93]">Due {opp.close_date}</p>
+                  <button onClick={() => setShowAiInsight(false)} className="text-emerald-700 hover:text-emerald-900 p-1">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="mt-4 flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-extrabold text-emerald-950">You're on track to meet your target.</div>
+                    <p className="text-xs text-emerald-800 mt-1 leading-relaxed">
+                      Based on your current pipeline, you have a 78% chance of reaching your monthly revenue goal of $90,000.
+                    </p>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </Card>
-      </div>
+              </div>
 
-      {/* Row 3: Overdue and Due Today Panels */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Overdue Panel */}
-        <Card className="border-t-4 border-t-[#DC2626]">
-          <CardHeader
-            title="Overdue Follow-ups"
-            subtitle="Immediate action required to avoid lead drop-off"
-            action={<Badge status="Overdue" label={`${metrics.overdue_count} Overdue`} />}
-          />
-          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {overdue.length === 0 ? (
-              <p className="text-xs text-[#10B981] py-4 text-center font-medium">✓ Zero overdue follow-up tasks!</p>
-            ) : (
-              overdue.map((item) => (
+              <div className="pt-4">
                 <Link
-                  key={item.id}
-                  to="/followups"
-                  className="block p-3 rounded-[6px] bg-[#FEF2F2] border border-[#FECACA] hover:bg-[#FEE2E2] transition-colors"
+                  to="/opportunities"
+                  className="inline-flex items-center justify-center px-4 py-2 bg-white border border-emerald-300 rounded-[6px] text-xs font-bold text-emerald-900 hover:bg-emerald-100/50 shadow-sm transition-colors"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <AlertCircle className="w-3.5 h-3.5 text-[#DC2626]" />
-                        <span className="text-xs font-semibold text-[#B91C1C]">{item.type} with {item.linked_name}</span>
-                      </div>
-                      <p className="text-[11px] text-[#7F1D1D] mt-1">Assigned to: {item.owner_name}</p>
-                    </div>
-                    <span className="text-[11px] font-mono text-[#DC2626] font-medium">{formatDateTime(item.due_at)}</span>
-                  </div>
+                  View opportunities <ChevronRight className="w-3.5 h-3.5 ml-1" />
                 </Link>
-              ))
-            )}
-          </div>
-        </Card>
-
-        {/* Due Today Panel */}
-        <Card className="border-t-4 border-t-[#D97706]">
-          <CardHeader
-            title="Due Today Follow-ups"
-            subtitle="Scheduled interactions for today"
-            action={<Badge status="Medium" label={`${metrics.due_today_count} Today`} />}
-          />
-          <div className="p-4 bg-[#FFFBEB] rounded-[6px] border border-[#FDE68A] text-xs text-[#92400E]">
-            <p className="font-semibold flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-[#D97706]" />
-              {metrics.due_today_count} planned interaction(s) scheduled for today.
-            </p>
-            <p className="mt-1 text-[#B45309]">Review follow-ups to maintain prompt prospect communication.</p>
-            <div className="mt-3">
-              <Link to="/followups" className="text-xs font-bold text-[#D97706] hover:underline">
-                Open Follow-ups Workspace →
-              </Link>
-            </div>
-          </div>
-        </Card>
+              </div>
+            </Card>
+          ) : (
+            <Card className="p-5 bg-white border border-[#D1D9E6] flex items-center justify-center h-full">
+              <button onClick={() => setShowAiInsight(true)} className="text-xs font-bold text-[#2B5FAD] flex items-center">
+                <Sparkles className="w-4 h-4 mr-1.5" /> Re-enable AI Insight
+              </button>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );

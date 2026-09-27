@@ -150,6 +150,14 @@ public class FollowUpService {
         return mapToDto(saved);
     }
 
+    @Transactional
+    public void deleteFollowUp(String id, User currentUser) {
+        FollowUp followUp = followUpRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("FollowUp not found with id: " + id));
+        followUpRepository.delete(followUp);
+        auditLogService.logEvent(currentUser != null ? currentUser.getId() : null, "DELETE", "FollowUp", id, "Deleted follow-up", null);
+    }
+
     public FollowUpDto mapToDto(FollowUp f) {
         UserDto ownerDto = null;
         if (f.getOwner() != null) {

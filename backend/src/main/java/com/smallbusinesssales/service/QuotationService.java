@@ -184,6 +184,14 @@ public class QuotationService {
         return mapToDto(saved);
     }
 
+    @Transactional
+    public void deleteQuotation(String id, User currentUser) {
+        Quotation quotation = quotationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Quotation not found with id: " + id));
+        quotationRepository.delete(quotation);
+        auditLogService.logEvent(currentUser != null ? currentUser.getId() : null, "DELETE", "Quotation", id, "Deleted quotation " + quotation.getNumber(), null);
+    }
+
     private synchronized String generateQuotationNumber() {
         int year = LocalDate.now().getYear();
         long count = quotationRepository.count() + 1;

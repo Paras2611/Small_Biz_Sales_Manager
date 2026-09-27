@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
+import { useConfirm } from '../context/ConfirmContext';
 import api from '../api/client';
 
 export function Admin() {
@@ -12,6 +13,7 @@ export function Admin() {
   const [settings, setSettings] = useState(null);
   const [addUserOpen, setAddUserOpen] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'sales_executive' });
+  const confirm = useConfirm();
 
   const fetchAdminData = async () => {
     try {
@@ -32,14 +34,20 @@ export function Admin() {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
-    try {
-      await api.post('/admin/users', newUser);
-      setAddUserOpen(false);
-      setNewUser({ name: '', email: '', password: '', role: 'sales_executive' });
-      fetchAdminData();
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to create user');
-    }
+    confirm({
+      title: 'Confirm Create User',
+      message: `Are you sure you want to add ${newUser.name} (${newUser.email}) as a ${newUser.role}?`,
+      confirmText: 'Create User',
+      cancelText: 'Cancel',
+      variant: 'primary',
+      operation: 'CREATE',
+      onConfirm: async () => {
+        await api.post('/admin/users', newUser);
+        setAddUserOpen(false);
+        setNewUser({ name: '', email: '', password: '', role: 'sales_executive' });
+        fetchAdminData();
+      },
+    });
   };
 
   return (

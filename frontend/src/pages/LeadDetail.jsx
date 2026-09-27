@@ -14,6 +14,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
+import { useConfirm } from '../context/ConfirmContext';
 import { formatDate, formatDateTime, formatCurrency } from '../utils/formatters';
 import api from '../api/client';
 
@@ -98,44 +99,64 @@ export function LeadDetail() {
     fetchAiInsights();
   }, [id]);
 
+  const confirm = useConfirm();
+
   const handleQualify = async (e) => {
     e.preventDefault();
-    try {
-      await api.post(`/leads/${id}/qualify`, qualifyForm);
-      setIsQualifyOpen(false);
-      fetchLeadData();
-      fetchAiInsights();
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Qualification failed');
-    }
+    confirm({
+      title: 'Confirm Lead Qualification',
+      message: 'Are you sure you want to mark this lead as Qualified?',
+      confirmText: 'Qualify Lead',
+      cancelText: 'Cancel',
+      variant: 'success',
+      operation: 'UPDATE',
+      onConfirm: async () => {
+        await api.post(`/leads/${id}/qualify`, qualifyForm);
+        setIsQualifyOpen(false);
+        fetchLeadData();
+        fetchAiInsights();
+      },
+    });
   };
 
   const handleConvert = async (e) => {
     e.preventDefault();
-    try {
-      const res = await api.post(`/leads/${id}/convert-opportunity`, convertForm);
-      setIsConvertOpen(false);
-      navigate(`/opportunities`);
-    } catch (err) {
-      alert(err.response?.data?.detail?.detail || 'Opportunity conversion failed');
-    }
+    confirm({
+      title: 'Confirm Opportunity Conversion',
+      message: `Are you sure you want to convert this lead into deal opportunity "${convertForm.title}" valued at ${formatCurrency(convertForm.amount)}?`,
+      confirmText: 'Convert Deal',
+      cancelText: 'Cancel',
+      variant: 'primary',
+      operation: 'CONVERT',
+      onConfirm: async () => {
+        await api.post(`/leads/${id}/convert-opportunity`, convertForm);
+        setIsConvertOpen(false);
+        navigate(`/opportunities`);
+      },
+    });
   };
 
   const handleCreateFollowup = async (e) => {
     e.preventDefault();
-    try {
-      await api.post('/followups', {
-        lead_id: id,
-        type: followupForm.type,
-        due_at: new Date(followupForm.due_at).toISOString(),
-        notes: followupForm.notes,
-      });
-      setIsFollowupOpen(false);
-      setFollowupForm({ type: 'Call', due_at: new Date(Date.now() + 86400000).toISOString().slice(0, 16), notes: '' });
-      fetchLeadData();
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to create follow-up');
-    }
+    confirm({
+      title: 'Confirm Schedule Follow-up',
+      message: `Schedule a ${followupForm.type} for this lead on ${followupForm.due_at}?`,
+      confirmText: 'Schedule Follow-up',
+      cancelText: 'Cancel',
+      variant: 'primary',
+      operation: 'CREATE',
+      onConfirm: async () => {
+        await api.post('/followups', {
+          lead_id: id,
+          type: followupForm.type,
+          due_at: new Date(followupForm.due_at).toISOString(),
+          notes: followupForm.notes,
+        });
+        setIsFollowupOpen(false);
+        setFollowupForm({ type: 'Call', due_at: new Date(Date.now() + 86400000).toISOString().slice(0, 16), notes: '' });
+        fetchLeadData();
+      },
+    });
   };
 
   if (loading || !lead) {

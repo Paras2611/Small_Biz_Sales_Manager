@@ -39,6 +39,7 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="leads" element={<Leads />} />
           <Route path="leads/:id" element={<LeadDetail />} />
+          <Route path="activities" element={<Followups />} />
           <Route path="followups" element={<Followups />} />
           <Route path="opportunities" element={<Opportunities />} />
           <Route path="quotations" element={<Quotation />} />

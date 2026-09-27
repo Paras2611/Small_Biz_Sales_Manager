@@ -71,4 +71,13 @@ public class OpportunityController {
     ) {
         return ResponseEntity.ok(opportunityService.markOpportunityLost(id, payload, currentUser));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<java.util.Map<String, String>> deleteOpportunity(
+            @PathVariable String id,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        opportunityService.deleteOpportunity(id, currentUser);
+        return ResponseEntity.ok(java.util.Map.of("message", "Opportunity deleted successfully"));
+    }
 }

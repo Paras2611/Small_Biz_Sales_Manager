@@ -63,4 +63,13 @@ public class FollowUpController {
     ) {
         return ResponseEntity.ok(followUpService.completeFollowUp(id, payload, currentUser));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<java.util.Map<String, String>> deleteFollowUp(
+            @PathVariable String id,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        followUpService.deleteFollowUp(id, currentUser);
+        return ResponseEntity.ok(java.util.Map.of("message", "Follow-up deleted successfully"));
+    }
 }

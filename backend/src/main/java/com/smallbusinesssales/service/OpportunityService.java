@@ -188,6 +188,14 @@ public class OpportunityService {
         return mapToDto(saved);
     }
 
+    @Transactional
+    public void deleteOpportunity(String id, User currentUser) {
+        Opportunity opp = opportunityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Opportunity not found with id: " + id));
+        opportunityRepository.delete(opp);
+        auditLogService.logEvent(currentUser != null ? currentUser.getId() : null, "DELETE", "Opportunity", id, "Deleted opportunity " + opp.getTitle(), null);
+    }
+
     public OpportunityDto mapToDto(Opportunity o) {
         CustomerDto customerDto = null;
         if (o.getCustomer() != null) {

@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
+import { useConfirm } from '../context/ConfirmContext';
 import { formatCurrency } from '../utils/formatters';
 import { useAuthStore } from '../store/authStore';
 import api from '../api/client';
@@ -21,6 +22,7 @@ export function Products() {
   });
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'administrator';
+  const confirm = useConfirm();
 
   const fetchProducts = async () => {
     try {
@@ -37,24 +39,35 @@ export function Products() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    try {
-      await api.post('/products', form);
-      setIsAddOpen(false);
-      setForm({ sku: '', name: '', category: 'Software', unit_price: 25000, tax_rate: 18.0 });
-      fetchProducts();
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to create product');
-    }
+    confirm({
+      title: 'Confirm Add Product',
+      message: `Are you sure you want to add product "${form.name}" (SKU: ${form.sku}) to the catalog?`,
+      confirmText: 'Add Product',
+      cancelText: 'Cancel',
+      variant: 'primary',
+      operation: 'CREATE',
+      onConfirm: async () => {
+        await api.post('/products', form);
+        setIsAddOpen(false);
+        setForm({ sku: '', name: '', category: 'Software', unit_price: 25000, tax_rate: 18.0 });
+        fetchProducts();
+      },
+    });
   };
 
-  const handleDeactivate = async (id) => {
-    if (!window.confirm('Are you sure you want to deactivate this product?')) return;
-    try {
-      await api.post(`/products/${id}/deactivate`);
-      fetchProducts();
-    } catch (err) {
-      alert('Failed to deactivate');
-    }
+  const handleDeactivate = (id, name) => {
+    confirm({
+      title: 'Confirm Deactivate Product',
+      message: `Are you sure you want to deactivate product "${name || id}"? It will no longer be available for new quotations.`,
+      confirmText: 'Deactivate',
+      cancelText: 'Cancel',
+      variant: 'danger',
+      operation: 'UPDATE',
+      onConfirm: async () => {
+        await api.post(`/products/${id}/deactivate`);
+        fetchProducts();
+      },
+    });
   };
 
   return (
@@ -99,7 +112,7 @@ export function Products() {
                   <td className="py-3 px-4 text-right">
                     {p.active && (
                       <button
-                        onClick={() => handleDeactivate(p.id)}
+                        onClick={() => handleDeactivate(p.id, p.name)}
                         className="text-xs text-[#EF4444] hover:underline font-semibold"
                       >
                         Deactivate

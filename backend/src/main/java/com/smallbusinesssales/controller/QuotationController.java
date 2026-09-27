@@ -68,4 +68,13 @@ public class QuotationController {
     ) {
         return ResponseEntity.ok(quotationService.rejectQuotation(id, payload, currentUser));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<java.util.Map<String, String>> deleteQuotation(
+            @PathVariable String id,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        quotationService.deleteQuotation(id, currentUser);
+        return ResponseEntity.ok(java.util.Map.of("message", "Quotation deleted successfully"));
+    }
 }

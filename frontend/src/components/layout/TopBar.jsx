@@ -3,16 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, UserCircle, Menu } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/useUIStore';
+import { useConfirm } from '../../context/ConfirmContext';
 import { Badge } from '../ui/Badge';
 
 export function TopBar() {
   const { user, logout } = useAuthStore();
   const { toggleSidebar } = useUIStore();
   const navigate = useNavigate();
+  const confirm = useConfirm();
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    confirm({
+      title: 'Confirm Sign Out',
+      message: 'Are you sure you want to sign out of Sales Manager? You will need to log back in to access your CRM workspace.',
+      confirmText: 'Sign Out',
+      cancelText: 'Stay Logged In',
+      variant: 'logout',
+      operation: 'LOGOUT',
+      onConfirm: () => {
+        logout();
+        navigate('/login');
+      },
+    });
   };
 
   const roleLabels = {
