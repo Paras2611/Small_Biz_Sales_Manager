@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Download } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { Card, CardHeader } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
+import { useConfirm } from '../context/ConfirmContext';
 import { formatCurrency } from '../utils/formatters';
+import { exportSalesReportCSV } from '../utils/exportUtils';
 import api from '../api/client';
 
 export function Reports() {
@@ -11,6 +15,7 @@ export function Reports() {
   const [quotes, setQuotes] = useState([]);
   const [owners, setOwners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const confirm = useConfirm();
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -34,11 +39,31 @@ export function Reports() {
     fetchReports();
   }, []);
 
+  const handleExportReport = () => {
+    confirm({
+      title: 'Confirm Download Sales Report',
+      message: 'Download formatted CSV export file of sales performance and conversion funnel metrics onto your device?',
+      confirmText: 'Download Report',
+      cancelText: 'Cancel',
+      variant: 'primary',
+      operation: 'CREATE',
+      onConfirm: () => {
+        exportSalesReportCSV(pipeline, funnel, quotes, owners);
+      },
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-[#1A2E4A]">Sales Reports & Analytics</h2>
-        <p className="text-xs text-[#6B7C93] mt-0.5">High-level visibility into conversion velocity and revenue metrics</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-[#1A2E4A]">Sales Reports & Analytics</h2>
+          <p className="text-xs text-[#6B7C93] mt-0.5">High-level visibility into conversion velocity and revenue metrics</p>
+        </div>
+
+        <Button onClick={handleExportReport} className="text-xs font-semibold">
+          <Download className="w-3.5 h-3.5 mr-1.5" /> Download Sales Report
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
